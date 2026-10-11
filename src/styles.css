@@ -49,15 +49,19 @@
   --shadow-popover: 0 12px 36px -4px rgba(0, 0, 0, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
 }
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
-body {
+html, body {
   margin: 0;
-  min-width: 320px;
+  padding: 0;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
   background-color: var(--bg-canvas);
   color: var(--ink-primary);
+  -webkit-tap-highlight-color: transparent;
 }
 
 button, input, select, textarea {
@@ -2020,6 +2024,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   margin-right: 5px;
 }
 
+/* ==========================================================================
+   Mobile Bottom Navigation Bar (Google Stitch / M3 for Pixel 8 Pro)
+   ========================================================================== */
+.mobile-bottom-nav {
+  display: none;
+}
+
 /* Responsive Media Queries */
 @media (max-width: 1100px) {
   .course-cards-row {
@@ -2033,40 +2044,140 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 @media (max-width: 860px) {
   .sidebar {
     transform: translateX(-100%);
-    transition: transform 0.2s ease;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-top: calc(24px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    width: 280px;
+    box-shadow: none;
   }
   .sidebar.sidebar-open {
     transform: translateX(0);
-    box-shadow: 10px 0 30px rgba(15, 23, 42, 0.15);
+    box-shadow: 12px 0 32px rgba(15, 23, 42, 0.25);
   }
   .mobile-close, .mobile-menu {
     display: grid;
+    place-items: center;
   }
   .mobile-scrim {
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.4);
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(2px);
     z-index: 25;
     border: 0;
   }
   .main-area {
     margin-left: 0;
     width: 100%;
+    /* Extra padding at bottom to clear the sticky mobile bottom nav on phone screens */
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 16px));
   }
   .dashboard-grid, .lower-grid {
     grid-template-columns: 1fr;
   }
   .page-content {
-    padding: 20px 18px;
+    padding: 16px 14px;
+    max-width: 100vw;
   }
   .topbar {
-    padding: 0 18px;
+    padding: env(safe-area-inset-top, 0px) 14px 0;
+    height: calc(58px + env(safe-area-inset-top, 0px));
   }
   .page-footer {
-    padding: 14px 18px;
+    padding: 14px;
     flex-direction: column;
     gap: 6px;
+    margin-bottom: calc(64px + env(safe-area-inset-bottom, 16px));
+  }
+
+  /* Mobile Bottom Navigation Bar */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(60px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(249, 249, 246, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--line);
+    z-index: 50;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    flex: 1;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: var(--ink-muted);
+    font-size: 10.5px;
+    font-weight: 600;
+    position: relative;
+    padding: 4px 0;
+    transition: color 0.15s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bottom-nav-item .icon-wrapper {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 28px;
+    border-radius: 14px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .bottom-nav-item.active {
+    color: var(--navy);
+    font-weight: 700;
+  }
+
+  .bottom-nav-item.active .icon-wrapper {
+    background: var(--primary-fixed);
+    color: var(--on-primary-fixed);
+  }
+
+  .bottom-nav-badge {
+    position: absolute;
+    top: -2px;
+    right: 4px;
+    background: var(--accent-red);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 999px;
+    border: 2px solid #fff;
+    line-height: 1.1;
+  }
+
+  .day-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    display: flex;
+    gap: 8px;
+    padding-bottom: 8px;
+  }
+  .day-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .day-tabs button {
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 }
 
@@ -2074,23 +2185,136 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .section-heading {
     flex-direction: column;
     align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .section-heading h1 {
+    font-size: 22px;
   }
   .heading-actions {
     width: 100%;
-    justify-content: flex-start;
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 8px;
+    padding-bottom: 4px;
   }
+  .heading-actions::-webkit-scrollbar {
+    display: none;
+  }
+  .heading-actions .btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 7px 12px;
+    font-size: 11.5px;
+  }
+
+  /* 2-column compact metrics grid on Pixel 8 Pro instead of huge 1-column stack */
   .metrics-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
   }
+  .metric-card {
+    padding: 12px 14px;
+  }
+  .metric-value {
+    font-size: 22px;
+    margin: 2px 0 4px;
+  }
+  .metric-bottom {
+    font-size: 9.5px;
+  }
+
   .course-cards-row {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .panel {
+    padding: 14px 14px;
+    border-radius: var(--radius-md);
+  }
+
+  /* Topbar responsive rules */
+  .desktop-breadcrumb-prefix {
+    display: none;
+  }
+  .date-pill {
+    display: none;
+  }
+  .sync-pill-text {
+    display: none;
+  }
+  .sync-pill {
+    padding: 6px 8px;
+  }
+  .add-task-text {
+    display: none;
+  }
+
+  /* Planner Date Bar & Filters */
+  .planner-datebar {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .planner-date-center {
+    min-width: 150px;
+    flex: 1;
+  }
+  .planner-datebar input[type="date"] {
+    max-width: 130px;
   }
   .filter-bar {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
+  }
+  .filter-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    display: flex;
+    gap: 6px;
+    padding-bottom: 4px;
+  }
+  .filter-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .filter-tab {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  /* Task row touch targets */
+  .task-row {
+    padding: 10px 0;
+    gap: 10px;
+  }
+  .task-check {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Modal Bottom Sheet */
+  .modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .modal-card {
+    width: 100%;
+    max-height: 86vh;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 16px));
   }
   .form-grid {
     grid-template-columns: 1fr;
+    gap: 10px;
   }
 }
 

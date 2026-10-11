@@ -6,8 +6,8 @@ import {
   ChevronRight, Circle, CircleHelp, Clock, Clock3, Cloud, CloudOff, Database,
   ExternalLink, Filter, Flame, FolderGit2, GraduationCap, LayoutDashboard,
   Layers, ListCheck, ListTodo, LogIn, LogOut, Menu, MoreHorizontal, Palette,
-  Plus, RefreshCw, RotateCcw, Search, Settings, Settings2, ShieldCheck,
-  Sparkles, Target, Trash2, TrendingUp, X, Zap
+  Plus, RefreshCw, RotateCcw, Search, Settings, Settings2, ShieldCheck, Smartphone,
+  Sparkles, Target, Trash2, TrendingUp, X, Zap, Copy
 } from 'lucide-react';
 import './styles.css';
 import {
@@ -841,11 +841,11 @@ function App() {
         {/* Topbar */}
         <header className="topbar">
           <div className="topbar-left">
-            <button className="icon-btn mobile-menu" onClick={() => setMobileNav(true)}>
+            <button className="icon-btn mobile-menu" onClick={() => setMobileNav(true)} aria-label="Open full drawer menu">
               <Menu size={20} />
             </button>
             <div className="breadcrumb">
-              Semester Tracker <ChevronRight size={14} />
+              <span className="desktop-breadcrumb-prefix">Semester Tracker <ChevronRight size={14} /></span>
               <b>{navItems.find(n => n.id === page)?.label || 'Dashboard'}</b>
             </div>
           </div>
@@ -858,7 +858,7 @@ function App() {
               title="Click to view Supabase connection status and configure database"
             >
               {user ? <Cloud size={14} /> : <Database size={14} />}
-              <span>{savingCloud ? 'Saving…' : syncStatus}</span>
+              <span className="sync-pill-text">{savingCloud ? 'Saving…' : syncStatus}</span>
               <i />
             </button>
 
@@ -870,7 +870,7 @@ function App() {
 
             {/* Quick Action Button */}
             <button className="btn btn-primary btn-sm" onClick={() => setModal({ type: 'task' })}>
-              <Plus size={14} /> Add Task
+              <Plus size={14} /> <span className="add-task-text">Add Task</span>
             </button>
           </div>
         </header>
@@ -971,6 +971,37 @@ function App() {
             {user ? 'Private Supabase Cloud Sync Active' : 'Offline First — Local Browser Cache'}
           </span>
         </footer>
+
+        {/* Mobile Bottom Navigation Bar for Pixel 8 Pro & Android */}
+        <nav className="mobile-bottom-nav">
+          {[
+            { id: 'dashboard', label: 'Today', icon: LayoutDashboard },
+            { id: 'timetable', label: 'Schedule', icon: Clock3 },
+            { id: 'planner', label: 'Revision', icon: CalendarDays, badge: overdueTasks.length },
+            { id: 'courses', label: 'Courses', icon: BookOpen },
+            { id: 'exams', label: 'Exams', icon: GraduationCap, badge: upcomingExamCount },
+          ].map(tab => {
+            const Icon = tab.icon;
+            const isSelected = page === tab.id;
+            return (
+              <button
+                key={tab.id}
+                className={`bottom-nav-item ${isSelected ? 'active' : ''}`}
+                onClick={() => {
+                  setPage(tab.id);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                aria-label={tab.label}
+              >
+                <div className="icon-wrapper">
+                  <Icon size={20} />
+                  {tab.badge > 0 && <span className="bottom-nav-badge">{tab.badge}</span>}
+                </div>
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </nav>
       </main>
 
       {/* Global Modals */}
@@ -2957,6 +2988,55 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
     }, 600);
   }
 
+  const SCHEMA_SQL = `create table if not exists public.revision_os_data (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  payload jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.revision_os_data enable row level security;
+
+create policy "Users can read their own revision data"
+  on public.revision_os_data for select to authenticated using (auth.uid() = user_id);
+
+create policy "Users can insert their own revision data"
+  on public.revision_os_data for insert to authenticated with check (auth.uid() = user_id);
+
+create policy "Users can update their own revision data"
+  on public.revision_os_data for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+grant select, insert, update on public.revision_os_data to authenticated;`;
+
+  async function handleCopySchema() {
+    try {
+      await navigator.clipboard.writeText(SCHEMA_SQL);
+      setToast('Schema SQL copied to clipboard! Run in Supabase SQL Editor.');
+    } catch {
+      setToast('Please copy SQL directly from supabase/schema.sql file');
+    }
+  }
+
+  async function handleAnonymousSignIn() {
+    setAuthError('');
+    const client = getSupabaseClient();
+    if (!client) {
+      setAuthError('Save and connect your Supabase URL first');
+      return;
+    }
+    try {
+      const res = await client.auth.signInAnonymously();
+      if (res.error) {
+        setAuthError(res.error.message);
+      } else {
+        setUser(res.data.user);
+        setToast('Device connected to Supabase cloud!');
+        onClose();
+      }
+    } catch (e) {
+      setAuthError(e.message || 'Anonymous sign-in failed');
+    }
+  }
+
   async function handleAuthSubmit(e) {
     e.preventDefault();
     setAuthError('');
@@ -3079,6 +3159,18 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
                   <span>{testResult.message}</span>
                 </div>
               )}
+
+              <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={handleCopySchema}
+                  title="Copy the SQL table definition to paste into Supabase SQL Editor"
+                >
+                  <Copy size={13} /> Copy Database Schema SQL
+                </button>
+                <small className="form-hint" style={{ margin: 0 }}>Execute in Supabase Dashboard → SQL Editor</small>
+              </div>
             </div>
 
             {/* Auth Section if URL is configured */}
@@ -3087,7 +3179,7 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
                 <h4>{user ? 'Account Signed In' : 'Sign in to Sync Account'}</h4>
                 {user ? (
                   <div className="logged-in-box">
-                    <span>Signed in as <b>{user.email}</b></span>
+                    <span>Signed in as <b>{user.email || 'Guest Device User'}</b></span>
                     <button className="btn btn-secondary btn-sm" onClick={handleSignOut}>
                       <LogOut size={14} /> Sign out
                     </button>
@@ -3110,9 +3202,17 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
                       required
                     />
                     {authError && <div className="error-text">{authError}</div>}
-                    <div className="auth-btns-row">
+                    <div className="auth-btns-row" style={{ flexWrap: 'wrap', gap: 8 }}>
                       <button className="btn btn-primary btn-sm" type="submit">
                         <LogIn size={14} /> {authMode === 'signup' ? 'Create Account' : 'Sign In'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={handleAnonymousSignIn}
+                        title="Instant 1-tap device sync without typing password"
+                      >
+                        <Smartphone size={14} /> Guest Device Sync
                       </button>
                       <button
                         type="button"
