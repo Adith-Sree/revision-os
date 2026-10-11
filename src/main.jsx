@@ -17,7 +17,9 @@ import {
   DEFAULT_TOPICS,
   DEFAULT_TASKS,
   DEFAULT_CLASS_LOG,
-  DEFAULT_SETTINGS
+  DEFAULT_SETTINGS,
+  DEFAULT_ASSESSMENTS,
+  DEFAULT_HOLIDAYS
 } from './initialData.js';
 import {
   getSupabaseClient,
@@ -53,6 +55,184 @@ const niceTime = (t) => {
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 };
 
+export const isHoliday = (date, holidays = []) => {
+  if (!date || !holidays?.length) return false;
+  return holidays.some(h => {
+    if (h.isRange) {
+      return date >= h.startDate && date <= h.endDate;
+    }
+    return h.date === date;
+  });
+};
+
+export const getHolidayForDate = (date, holidays = []) => {
+  if (!date || !holidays?.length) return null;
+  return holidays.find(h => {
+    if (h.isRange) {
+      return date >= h.startDate && date <= h.endDate;
+    }
+    return h.date === date;
+  }) || null;
+};
+
+// Calculate unlogged scheduled teaching days (excluding weekends and holidays)
+export const calculateStaleDays = (courseId, slots = [], classLog = [], holidays = [], today = todayISO(), mappings = {}) => {
+  if (!courseId) return 0;
+  const courseSlots = slots.filter(s => {
+    const target = mappings[s.code] || s.code;
+    return target === courseId;
+  });
+  if (!courseSlots.length) return 0;
+
+  const activeWeekdays = new Set(courseSlots.map(s => s.day));
+  let unloggedTeachingDays = 0;
+
+  for (let i = 1; i <= 14; i++) {
+    const checkDate = shiftDate(today, -i);
+    const day = dayName(checkDate);
+    if (day === 'Saturday' || day === 'Sunday') continue;
+    if (isHoliday(checkDate, holidays)) continue;
+    if (!activeWeekdays.has(day)) continue;
+
+    const hasLog = classLog.some(log => {
+      if (log.date !== checkDate) return false;
+      const target = mappings[log.code] || log.code;
+      return target === courseId;
+    });
+
+    if (hasLog) {
+      break;
+    } else {
+      unloggedTeachingDays++;
+    }
+  }
+
+  return unloggedTeachingDays;
+};
+
+// Explainable priority formula (0-100) per EXAM_TRACKER.md §3:
+// 35% weakness + 25% exam urgency + 20% backlog + 10% syllabus incomplete + 10% stale class log
+export const computePriorityScore = (course, assessments = [], tasks = [], classLog = [], holidays = [], today = todayISO(), slots = [], mappings = {}) => {
+  const courseId = course?.id || course?.code;
+  if (!courseId) return { score: 0, autoLabel: 'Maintain', effectiveLabel: 'Maintain', isProvisional: false, breakdown: {} };
+
+  // 1. Weakness (35%): Student confidence + past quiz/exam marks
+  const confidence = typeof course.confidence === 'number' ? course.confidence : 3;
+  const confidenceWeakness = ((5 - confidence) / 4) * 100;
+  const courseAssessments = (assessments || []).filter(a => a.courseId === courseId);
+  const gradedAssessments = courseAssessments.filter(a =>
+    typeof a.marksObtained === 'number' &&
+    typeof a.maxMarks === 'number' &&
+    a.maxMarks > 0
+  );
+
+  let weaknessScore = confidenceWeakness;
+  let hasWeaknessMarks = gradedAssessments.length > 0;
+  if (hasWeaknessMarks) {
+    const avgMarksPct = gradedAssessments.reduce((sum, a) => sum + (a.marksObtained / a.maxMarks) * 100, 0) / gradedAssessments.length;
+    const marksWeakness = Math.max(0, Math.min(100, 100 - avgMarksPct));
+    weaknessScore = (confidenceWeakness * 0.5) + (marksWeakness * 0.5);
+  }
+  const hasWeaknessData = true;
+
+  // 2. Exam Urgency (25%): Rises as next confirmed assessment approaches
+  let examUrgencyScore = 0;
+  let nextConfirmedExam = null;
+  let minDaysToExam = Infinity;
+
+  const upcomingConfirmed = courseAssessments.filter(a => a.status === 'confirmed' && a.scheduledAt);
+  for (const a of upcomingConfirmed) {
+    const examDate = a.scheduledAt.slice(0, 10);
+    const diffTime = new Date(`${examDate}T12:00:00`) - new Date(`${today}T12:00:00`);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays >= 0 && diffDays < minDaysToExam) {
+      minDaysToExam = diffDays;
+      nextConfirmedExam = { ...a, daysUntil: diffDays };
+    }
+  }
+
+  const hasUrgencyData = !!nextConfirmedExam;
+  if (hasUrgencyData) {
+    if (minDaysToExam <= 0) examUrgencyScore = 100;
+    else if (minDaysToExam <= 3) examUrgencyScore = 95;
+    else if (minDaysToExam <= 7) examUrgencyScore = 80;
+    else if (minDaysToExam <= 14) examUrgencyScore = 60;
+    else if (minDaysToExam <= 21) examUrgencyScore = 40;
+    else if (minDaysToExam <= 30) examUrgencyScore = 20;
+    else examUrgencyScore = 10;
+  }
+
+  // 3. Backlog (20%): Overdue topic reviews & overdue assignments
+  const courseTasks = (tasks || []).filter(t => t.courseId === courseId && t.status !== 'done');
+  const overdueTasks = courseTasks.filter(t => t.dueDate && t.dueDate < today);
+  const courseAssignments = (course.assignments || []).filter(a => a.status !== 'submitted' && a.status !== 'completed');
+  const overdueAssignments = courseAssignments.filter(a => a.dueDate && a.dueDate < today);
+  const totalBacklog = overdueTasks.length + overdueAssignments.length;
+  const backlogScore = Math.min(100, totalBacklog * 25);
+  const hasBacklogData = true;
+
+  // 4. Syllabus Incomplete (10%): Entered completion percentage
+  const syllabusCompletion = typeof course.syllabusCompletion === 'number' ? course.syllabusCompletion : 0;
+  const syllabusScore = Math.max(0, Math.min(100, 100 - syllabusCompletion));
+  const hasSyllabusData = typeof course.syllabusCompletion === 'number';
+
+  // 5. Stale Class Log (10%): Eligible teaching days missed (>2 days)
+  const unloggedDays = calculateStaleDays(courseId, slots, classLog, holidays, today, mappings);
+  let staleScore = 0;
+  if (unloggedDays <= 2) staleScore = 0;
+  else if (unloggedDays === 3) staleScore = 60;
+  else if (unloggedDays === 4) staleScore = 80;
+  else staleScore = 100;
+  const hasStaleData = true;
+
+  // Proportional redistribution when data is missing
+  const baseWeights = { weakness: 35, examUrgency: 25, backlog: 20, syllabus: 10, staleLog: 10 };
+  const availability = { weakness: hasWeaknessData, examUrgency: hasUrgencyData, backlog: hasBacklogData, syllabus: hasSyllabusData, staleLog: hasStaleData };
+  const activeWeightTotal = Object.entries(availability).filter(([_, avail]) => avail).reduce((sum, [key]) => sum + baseWeights[key], 0);
+
+  const effectiveWeights = {};
+  for (const [key, avail] of Object.entries(availability)) {
+    effectiveWeights[key] = (avail && activeWeightTotal > 0) ? (baseWeights[key] / activeWeightTotal) * 100 : 0;
+  }
+
+  const finalScore = Math.round(
+    (weaknessScore * (effectiveWeights.weakness || 0) +
+     examUrgencyScore * (effectiveWeights.examUrgency || 0) +
+     backlogScore * (effectiveWeights.backlog || 0) +
+     syllabusScore * (effectiveWeights.syllabus || 0) +
+     staleScore * (effectiveWeights.staleLog || 0)) / 100
+  );
+
+  const isProvisional = !hasUrgencyData;
+
+  const isHighRisk = (nextConfirmedExam && nextConfirmedExam.daysUntil <= 3) || overdueTasks.length >= 3;
+  let autoLabel = 'Maintain';
+  if (finalScore >= 70 || isHighRisk) autoLabel = 'Must do';
+  else if (finalScore >= 50) autoLabel = 'High';
+  else if (finalScore >= 25) autoLabel = 'Normal';
+  else autoLabel = 'Maintain';
+
+  const effectiveLabel = course.manualPriorityOverride || autoLabel;
+
+  return {
+    score: Math.max(0, Math.min(100, finalScore)),
+    autoLabel,
+    effectiveLabel,
+    isProvisional,
+    unloggedDays,
+    nextConfirmedExam,
+    overdueTasksCount: overdueTasks.length,
+    overdueAssignmentsCount: overdueAssignments.length,
+    breakdown: {
+      weakness: { score: Math.round(weaknessScore), weight: Math.round(effectiveWeights.weakness || 0), available: hasWeaknessData, detail: `Confidence ${confidence}/5${hasWeaknessMarks ? ` · Marks ${Math.round(100 - weaknessScore)}%` : ' · No marks recorded'}` },
+      examUrgency: { score: Math.round(examUrgencyScore), weight: Math.round(effectiveWeights.examUrgency || 0), available: hasUrgencyData, detail: nextConfirmedExam ? `${nextConfirmedExam.title} in ${nextConfirmedExam.daysUntil}d` : 'No confirmed exam date' },
+      backlog: { score: Math.round(backlogScore), weight: Math.round(effectiveWeights.backlog || 0), available: hasBacklogData, detail: `${overdueTasks.length} overdue reviews · ${overdueAssignments.length} overdue assignments` },
+      syllabus: { score: Math.round(syllabusScore), weight: Math.round(effectiveWeights.syllabus || 0), available: hasSyllabusData, detail: `${syllabusCompletion}% syllabus completed` },
+      staleLog: { score: Math.round(staleScore), weight: Math.round(effectiveWeights.staleLog || 0), available: hasStaleData, detail: unloggedDays > 2 ? `${unloggedDays} teaching days unlogged (Stale!)` : `${unloggedDays} teaching days unlogged` }
+    }
+  };
+};
+
 function getInitialState() {
   const saved = localStorage.getItem('revision_os_state_v2');
   if (saved) {
@@ -65,6 +245,8 @@ function getInitialState() {
         topics: parsed.topics?.length ? parsed.topics : DEFAULT_TOPICS,
         tasks: parsed.tasks?.length ? parsed.tasks : DEFAULT_TASKS,
         classLog: parsed.classLog?.length ? parsed.classLog : DEFAULT_CLASS_LOG,
+        assessments: parsed.assessments?.length ? parsed.assessments : DEFAULT_ASSESSMENTS,
+        holidays: parsed.holidays?.length ? parsed.holidays : DEFAULT_HOLIDAYS,
         settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) }
       };
     } catch (e) {
@@ -78,6 +260,8 @@ function getInitialState() {
     topics: DEFAULT_TOPICS,
     tasks: DEFAULT_TASKS,
     classLog: DEFAULT_CLASS_LOG,
+    assessments: DEFAULT_ASSESSMENTS,
+    holidays: DEFAULT_HOLIDAYS,
     settings: DEFAULT_SETTINGS
   };
 }
