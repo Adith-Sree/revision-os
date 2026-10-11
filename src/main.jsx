@@ -616,13 +616,18 @@ function App() {
 
   // Backup handlers
   function exportData() {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const backupPayload = {
+      version: 3,
+      exportedAt: new Date().toISOString(),
+      ...data
+    };
+    const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `revision-os-iitg-backup-${todayISO()}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
-    setToast('Backup exported as JSON');
+    setToast('Backup v3 exported (with assessments & holidays)');
   }
 
   function importData(e) {
@@ -633,7 +638,12 @@ function App() {
       try {
         const parsed = JSON.parse(reader.result);
         if (parsed.courses && parsed.slots) {
-          setData(parsed);
+          setData(prev => ({
+            ...prev,
+            ...parsed,
+            assessments: parsed.assessments?.length ? parsed.assessments : (prev.assessments?.length ? prev.assessments : DEFAULT_ASSESSMENTS),
+            holidays: parsed.holidays?.length ? parsed.holidays : (prev.holidays?.length ? prev.holidays : DEFAULT_HOLIDAYS)
+          }));
           setToast('Backup imported successfully');
         } else {
           setToast('Invalid backup file structure');
@@ -644,6 +654,28 @@ function App() {
     };
     reader.readAsText(file);
     e.target.value = '';
+  }
+
+  function toggleHoliday(date, label = 'Institute Holiday') {
+    const existing = getHolidayForDate(date, data.holidays);
+    update(d => {
+      const match = getHolidayForDate(date, d.holidays);
+      if (match) {
+        return {
+          ...d,
+          holidays: d.holidays.filter(h => h.id !== match.id)
+        };
+      } else {
+        return {
+          ...d,
+          holidays: [
+            ...(d.holidays || []),
+            { id: uid(), date, label: label.trim() || 'Institute Holiday', isRange: false, createdAt: new Date().toISOString() }
+          ]
+        };
+      }
+    });
+    setToast(existing ? `Removed holiday on ${fmtDate(date)}` : `Marked ${fmtDate(date)} as campus holiday`);
   }
 
   // Calculated metrics
@@ -664,11 +696,16 @@ function App() {
     data.tasks.filter(t => t.status === 'todo').length,
     [data.tasks]
   );
+  const upcomingExamCount = useMemo(() =>
+    (data.assessments || []).filter(a => a.status === 'confirmed' && a.scheduledAt && a.scheduledAt >= today).length,
+    [data.assessments, today]
+  );
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'timetable', label: 'Timetable', icon: Clock3 },
     { id: 'courses', label: 'Course Library', icon: BookOpen },
+    { id: 'exams', label: 'Exam Tracker', icon: GraduationCap },
     { id: 'planner', label: 'Revision Planner', icon: CalendarDays },
     { id: 'analytics', label: 'Analytics', icon: TrendingUp }
   ];
@@ -711,6 +748,9 @@ function App() {
                 )}
                 {item.id === 'timetable' && (
                   <span className="nav-count-sub">{data.slots.length}</span>
+                )}
+                {item.id === 'exams' && upcomingExamCount > 0 && (
+                  <span className="nav-count-sub">{upcomingExamCount}</span>
                 )}
               </button>
             );
@@ -841,6 +881,27 @@ function App() {
             />
           )}
 
+          {page === 'exams' && (
+            <ExamTrackerPage
+              data={data}
+              today={today}
+              onUpdate={update}
+              onAddAssessment={(initialCourseId) => setModal({ type: 'assessment', courseId: initialCourseId })}
+              onEditAssessment={(asm) => setModal({ type: 'assessment', assessment: asm })}
+              onDeleteAssessment={(id) => {
+                if (window.confirm('Delete this assessment record?')) {
+                  update(d => ({ ...d, assessments: d.assessments.filter(a => a.id !== id) }));
+                  setToast('Assessment deleted');
+                }
+              }}
+              onArchiveAssessment={(id) => {
+                update(d => ({ ...d, assessments: d.assessments.map(a => a.id === id ? { ...a, status: 'cancelled' } : a) }));
+                setToast('Assessment marked as archived');
+              }}
+              onPage={setPage}
+            />
+          )}
+
           {page === 'planner' && (
             <RevisionPlannerView
               data={data}
@@ -851,6 +912,7 @@ function App() {
               onReschedule={rescheduleTask}
               onAddTask={(date) => setModal({ type: 'task', date })}
               onDeleteTask={(id) => update(d => ({ ...d, tasks: d.tasks.filter(t => t.id !== id) }))}
+              onToggleHoliday={toggleHoliday}
             />
           )}
 
@@ -892,6 +954,31 @@ function App() {
             update(d => ({ ...d, mappings: { ...d.mappings, [code]: courseId } }));
             setModal(null);
             setToast(`Mapped ${code} to catalogue`);
+          }}
+          onAssessment={(assessmentData) => {
+            update(d => {
+              const existingIndex = (d.assessments || []).findIndex(a => a.id === assessmentData.id);
+              if (existingIndex >= 0) {
+                const nextList = [...d.assessments];
+                nextList[existingIndex] = { ...nextList[existingIndex], ...assessmentData, updatedAt: new Date().toISOString() };
+                return { ...d, assessments: nextList };
+              } else {
+                return {
+                  ...d,
+                  assessments: [
+                    ...(d.assessments || []),
+                    {
+                      id: uid(),
+                      createdAt: new Date().toISOString(),
+                      updatedAt: new Date().toISOString(),
+                      ...assessmentData
+                    }
+                  ]
+                };
+              }
+            });
+            setModal(null);
+            setToast(assessmentData.id ? 'Assessment record updated' : 'Assessment scheduled & saved');
           }}
           user={user}
           setUser={setUser}
@@ -941,6 +1028,46 @@ function DashboardView({
   const completedTodayCount = data.tasks.filter(t => t.status === 'done' && (t.completedAt === today || (!t.completedAt && t.dueDate === today))).length;
   const pendingQueue = todaysTasks.filter(t => t.status === 'todo');
 
+  const todayHoliday = useMemo(() => getHolidayForDate(today, data.holidays), [today, data.holidays]);
+
+  // Exam alerts (overdue, happening today, or within 7 days)
+  const examAlerts = useMemo(() => {
+    return (data.assessments || [])
+      .filter(a => a.status === 'confirmed' && a.scheduledAt)
+      .map(a => {
+        const d = a.scheduledAt.slice(0, 10);
+        const diff = Math.ceil((new Date(`${d}T12:00:00`) - new Date(`${today}T12:00:00`)) / (1000 * 60 * 60 * 24));
+        return { ...a, daysUntil: diff };
+      })
+      .filter(a => a.daysUntil <= 7)
+      .sort((a, b) => a.daysUntil - b.daysUntil);
+  }, [data.assessments, today]);
+
+  // Assignment alerts (due <= 48h, due <= 7d)
+  const assignmentAlerts = useMemo(() => {
+    const list = [];
+    (data.courses || []).forEach(c => {
+      (c.assignments || []).forEach(a => {
+        if (a.status !== 'submitted' && a.status !== 'completed' && a.dueDate) {
+          const diff = Math.ceil((new Date(`${a.dueDate}T12:00:00`) - new Date(`${today}T12:00:00`)) / (1000 * 60 * 60 * 24));
+          if (diff <= 7) {
+            list.push({ ...a, courseCode: c.code, daysUntil: diff });
+          }
+        }
+      });
+    });
+    return list.sort((a, b) => a.daysUntil - b.daysUntil);
+  }, [data.courses, today]);
+
+  // Stale class logs (> 2 eligible teaching days)
+  const staleCourses = useMemo(() => {
+    if (todayHoliday) return [];
+    return (data.courses || []).map(course => {
+      const unlogged = calculateStaleDays(course.id, data.slots, data.classLog, data.holidays, today, data.mappings);
+      return { course, unlogged };
+    }).filter(item => item.unlogged > 2);
+  }, [data.courses, data.slots, data.classLog, data.holidays, today, data.mappings, todayHoliday]);
+
   return (
     <>
       {/* Page Header */}
@@ -963,6 +1090,44 @@ function DashboardView({
         </div>
       </div>
 
+      {/* Holiday Banner if today is holiday */}
+      {todayHoliday && (
+        <div className="holiday-banner">
+          <div className="holiday-banner-content">
+            <span className="holiday-banner-badge">🏖️ Institute Holiday</span>
+            <div className="holiday-banner-text">
+              <b>{todayHoliday.label || 'Campus Holiday Today'}</b>
+              <span>Lectures are paused today. Stale log counters are frozen and missed classes will not be recorded.</span>
+            </div>
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={() => onPage('planner')}>
+            Open Planner <ArrowRight size={13} />
+          </button>
+        </div>
+      )}
+
+      {/* Imminent Exam Alerts */}
+      {examAlerts.length > 0 && (
+        <div className="overdue-banner" style={{ background: '#fff7ed', borderColor: '#fed7aa', marginBottom: '14px' }}>
+          <div className="overdue-banner-icon" style={{ background: '#ffedd5', color: '#ea580c' }}>
+            <GraduationCap size={20} />
+          </div>
+          <div className="overdue-banner-text">
+            <b style={{ color: '#c2410c' }}>
+              {examAlerts.length} Confirmed Exam{examAlerts.length === 1 ? '' : 's'} Approaching
+            </b>
+            <span style={{ color: '#9a3412' }}>
+              {examAlerts.map(e => `${e.courseId} ${e.title} (${e.daysUntil <= 0 ? 'Today!' : `in ${e.daysUntil}d`})`).join(' · ')}
+            </span>
+          </div>
+          <div className="overdue-banner-actions">
+            <button className="btn btn-secondary btn-sm" onClick={() => onPage('exams')}>
+              Exam Tracker <ArrowRight size={13} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Overdue Tasks Alert Strip */}
       {overdueTasks.length > 0 && (
         <div className="overdue-banner">
@@ -978,6 +1143,47 @@ function DashboardView({
               View Overdue <ArrowRight size={13} />
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Urgent Assignments Alert */}
+      {assignmentAlerts.length > 0 && (
+        <div className="mapping-alert" style={{ background: '#fefce8', borderColor: '#fef08a', marginBottom: '14px' }}>
+          <div className="mapping-alert-icon" style={{ background: '#fef9c3', color: '#ca8a04' }}>
+            <BookOpen size={18} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <b style={{ color: '#854d0e', display: 'block', fontSize: '13px' }}>
+              {assignmentAlerts.length} Course Assignment{assignmentAlerts.length === 1 ? '' : 's'} Due Soon
+            </b>
+            <div style={{ fontSize: '11px', color: '#713f12', marginTop: '2px' }}>
+              {assignmentAlerts.map(a => `${a.courseCode}: ${a.title} (${a.daysUntil < 0 ? 'overdue' : a.daysUntil === 0 ? 'today' : `in ${a.daysUntil}d`})`).join(' · ')}
+            </div>
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={() => onPage('courses')}>
+            Course Library <ArrowRight size={13} />
+          </button>
+        </div>
+      )}
+
+      {/* Stale Class Logs Alert */}
+      {staleCourses.length > 0 && (
+        <div className="mapping-alert" style={{ background: '#fff7ed', borderColor: '#fdba74', marginBottom: '14px' }}>
+          <div className="mapping-alert-icon" style={{ background: '#ffedd5', color: '#c2410c' }}>
+            <Clock3 size={18} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <b style={{ color: '#9a3412', display: 'block', fontSize: '13px' }}>
+              {staleCourses.length} Course{staleCourses.length === 1 ? '' : 's'} with Stale Lecture Logs (&gt;2 teaching days unlogged)
+            </b>
+            <div style={{ fontSize: '11px', color: '#7c2d12', marginTop: '2px' }}>
+              {staleCourses.map(sc => `${sc.course.code}: ${sc.unlogged} teaching days missed`).join(' · ')}
+              {' — '}Keep spaced recall accurate by recording what was taught.
+            </div>
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={() => onPage('timetable')}>
+            Timetable <ArrowRight size={13} />
+          </button>
         </div>
       )}
 
@@ -1695,11 +1901,12 @@ function CourseLibraryView({ data, update, onAddTopic, onSpacedReview, onAddTask
 // 4. REVISION PLANNER VIEW
 // ==========================================
 function RevisionPlannerView({
-  data, selectedDate, setSelectedDate, courseFor, onTaskAction, onReschedule, onAddTask, onDeleteTask
+  data, selectedDate, setSelectedDate, courseFor, onTaskAction, onReschedule, onAddTask, onDeleteTask, onToggleHoliday
 }) {
   const [filterTab, setFilterTab] = useState('all');
   const [courseFilter, setCourseFilter] = useState('all');
   const today = todayISO();
+  const currentHoliday = getHolidayForDate(selectedDate, data.holidays);
 
   const filteredTasks = useMemo(() => {
     return data.tasks.filter(t => {
@@ -1759,7 +1966,42 @@ function RevisionPlannerView({
           value={selectedDate}
           onChange={e => setSelectedDate(e.target.value)}
         />
+        <button
+          className="btn btn-secondary btn-sm"
+          onClick={() => {
+            if (currentHoliday) {
+              onToggleHoliday(selectedDate);
+            } else {
+              const label = window.prompt(`Holiday name for ${fmtDate(selectedDate)}:`, 'Institute Holiday');
+              if (label !== null) {
+                onToggleHoliday(selectedDate, label || 'Institute Holiday');
+              }
+            }
+          }}
+          style={currentHoliday ? { borderColor: '#0d9488', color: '#0f766e', background: '#ccfbf1' } : {}}
+        >
+          {currentHoliday ? '🏖️ Holiday Active' : 'Mark as Holiday'}
+        </button>
       </div>
+
+      {/* Holiday Banner for selected date */}
+      {currentHoliday && (
+        <div className="holiday-banner">
+          <div className="holiday-banner-content">
+            <span className="holiday-banner-badge">🏖️ Campus Holiday</span>
+            <div className="holiday-banner-text">
+              <b>{currentHoliday.label || 'Institute Holiday'}</b>
+              <span>Classes on this date do not count as missed. Stale log penalty is paused.</span>
+            </div>
+          </div>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => onToggleHoliday(selectedDate)}
+          >
+            Remove Holiday
+          </button>
+        </div>
+      )}
 
       {/* Filter Tabs Bar */}
       <div className="filter-bar">
@@ -2002,9 +2244,588 @@ function AnalyticsView({ data, today, courseFor }) {
 }
 
 // ==========================================
+// 6. EXAM CALENDAR & PERFORMANCE TRACKER VIEW
+// ==========================================
+function ExamTrackerPage({
+  data, today, onUpdate, onAddAssessment, onEditAssessment, onDeleteAssessment, onArchiveAssessment, onPage
+}) {
+  const [tab, setTab] = useState('calendar'); // 'calendar' | 'marks' | 'priority'
+  const [courseFilter, setCourseFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const courses = data.courses || [];
+  const assessments = data.assessments || [];
+
+  const filteredAssessments = useMemo(() => {
+    return assessments.filter(a => {
+      if (courseFilter !== 'all' && a.courseId !== courseFilter) return false;
+      if (typeFilter !== 'all' && a.type !== typeFilter) return false;
+      if (statusFilter !== 'all' && a.status !== statusFilter) return false;
+      return true;
+    });
+  }, [assessments, courseFilter, typeFilter, statusFilter]);
+
+  const scheduledUpcoming = useMemo(() => {
+    return filteredAssessments
+      .filter(a => a.scheduledAt && a.status !== 'completed' && a.status !== 'cancelled')
+      .sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt));
+  }, [filteredAssessments]);
+
+  const dateNotAnnounced = useMemo(() => {
+    return filteredAssessments.filter(a => !a.scheduledAt && a.status !== 'completed' && a.status !== 'cancelled');
+  }, [filteredAssessments]);
+
+  const completedOrGraded = useMemo(() => {
+    return filteredAssessments.filter(a => a.status === 'completed' || (typeof a.marksObtained === 'number' && typeof a.maxMarks === 'number'));
+  }, [filteredAssessments]);
+
+  const nextImminentExam = useMemo(() => {
+    const upcoming = assessments
+      .filter(a => a.status === 'confirmed' && a.scheduledAt)
+      .map(a => {
+        const d = a.scheduledAt.slice(0, 10);
+        const diff = Math.ceil((new Date(`${d}T12:00:00`) - new Date(`${today}T12:00:00`)) / (1000 * 60 * 60 * 24));
+        return { ...a, daysUntil: diff };
+      })
+      .filter(a => a.daysUntil >= 0)
+      .sort((a, b) => a.daysUntil - b.daysUntil);
+    return upcoming[0] || null;
+  }, [assessments, today]);
+
+  const gradedAvg = useMemo(() => {
+    const graded = assessments.filter(a => typeof a.marksObtained === 'number' && typeof a.maxMarks === 'number' && a.maxMarks > 0);
+    if (!graded.length) return null;
+    const avg = graded.reduce((sum, a) => sum + (a.marksObtained / a.maxMarks) * 100, 0) / graded.length;
+    return Math.round(avg * 10) / 10;
+  }, [assessments]);
+
+  const getCourse = (id) => courses.find(c => c.id === id || c.code === id) || { code: id, name: id, accent: '#475569', bg: '#f1f5f9' };
+
+  const getCountdownInfo = (scheduledAt) => {
+    if (!scheduledAt) return { label: 'Date TBA', className: 'tentative', days: null };
+    const dateStr = scheduledAt.slice(0, 10);
+    const diff = Math.ceil((new Date(`${dateStr}T12:00:00`) - new Date(`${today}T12:00:00`)) / (1000 * 60 * 60 * 24));
+    if (diff < 0) return { label: `${Math.abs(diff)}d overdue`, className: 'overdue', days: diff };
+    if (diff === 0) return { label: 'Today!', className: 'overdue', days: 0 };
+    if (diff <= 7) return { label: `In ${diff} day${diff === 1 ? '' : 's'}`, className: 'urgent', days: diff };
+    if (diff <= 14) return { label: `In ${diff} days`, className: 'soon', days: diff };
+    return { label: `In ${diff} days`, className: 'confirmed', days: diff };
+  };
+
+  return (
+    <>
+      <div className="section-heading">
+        <div>
+          <div className="eyebrow">SEMESTER ASSESSMENTS & PERFORMANCE</div>
+          <h1>Exam Calendar & Tracker</h1>
+          <p className="muted">
+            Track Quiz 1, Midsem, Quiz 2, Endsem, and assignments. One editable source of truth.
+          </p>
+        </div>
+        <div className="heading-actions">
+          <button className="btn btn-primary" onClick={() => onAddAssessment()}>
+            <Plus size={15} /> Add Assessment
+          </button>
+        </div>
+      </div>
+
+      {/* Top Academic Metric Cards */}
+      <div className="metrics-grid">
+        <div className="metric-card">
+          <div className="metric-icon tone-orange"><AlarmClock size={18} /></div>
+          <div className="metric-label">Next Confirmed Exam</div>
+          <div className="metric-value">
+            {nextImminentExam ? (nextImminentExam.daysUntil === 0 ? 'Today' : `${nextImminentExam.daysUntil}d`) : '—'}
+          </div>
+          <div className="metric-bottom">
+            <span>{nextImminentExam ? `${nextImminentExam.courseId} · ${nextImminentExam.title}` : 'No confirmed exam date'}</span>
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-icon tone-blue"><CalendarDays size={18} /></div>
+          <div className="metric-label">Scheduled / Total</div>
+          <div className="metric-value">
+            {assessments.filter(a => !!a.scheduledAt).length} / {assessments.length}
+          </div>
+          <div className="metric-bottom">
+            <span>{dateNotAnnounced.length} unannounced</span>
+            <span>{assessments.filter(a => a.status === 'confirmed').length} confirmed</span>
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-icon tone-green"><TrendingUp size={18} /></div>
+          <div className="metric-label">Graded Average</div>
+          <div className="metric-value">
+            {gradedAvg !== null ? `${gradedAvg}%` : '—'}
+          </div>
+          <div className="metric-bottom">
+            <span>{assessments.filter(a => typeof a.marksObtained === 'number').length} assessments graded</span>
+            <span>Blank fields preserved</span>
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-icon tone-purple"><GraduationCap size={18} /></div>
+          <div className="metric-label">High Priority Subjects</div>
+          <div className="metric-value">
+            {courses.filter(c => {
+              const p = computePriorityScore(c, assessments, data.tasks, data.classLog, data.holidays, today, data.slots, data.mappings);
+              return p.effectiveLabel === 'Must do' || p.effectiveLabel === 'High';
+            }).length}
+          </div>
+          <div className="metric-bottom">
+            <span>Calculated via explainable score</span>
+          </div>
+        </div>
+      </div>
+
+      {/* View Tabs */}
+      <div className="filter-bar" style={{ marginTop: '24px' }}>
+        <div className="filter-tabs">
+          <button className={tab === 'calendar' ? 'selected' : ''} onClick={() => setTab('calendar')}>
+            📅 Semester Calendar ({scheduledUpcoming.length + dateNotAnnounced.length})
+          </button>
+          <button className={tab === 'marks' ? 'selected' : ''} onClick={() => setTab('marks')}>
+            📊 Marks & History ({completedOrGraded.length})
+          </button>
+          <button className={tab === 'priority' ? 'selected' : ''} onClick={() => setTab('priority')}>
+            🎯 Subject Priority & Health ({courses.length})
+          </button>
+        </div>
+
+        {tab !== 'priority' && (
+          <div className="filter-selects">
+            <select value={courseFilter} onChange={e => setCourseFilter(e.target.value)}>
+              <option value="all">All Courses</option>
+              {courses.map(c => <option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}
+            </select>
+            <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
+              <option value="all">All Types</option>
+              <option value="Quiz 1">Quiz 1</option>
+              <option value="Midsem">Midsem</option>
+              <option value="Quiz 2">Quiz 2</option>
+              <option value="Endsem">Endsem</option>
+              <option value="Assignment">Assignment</option>
+              <option value="Lab/Practical">Lab / Practical</option>
+              <option value="Other">Other</option>
+            </select>
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+              <option value="all">All Statuses</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="tentative">Tentative</option>
+              <option value="completed">Completed</option>
+              <option value="postponed">Postponed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+        )}
+      </div>
+
+      {/* TAB 1: CALENDAR VIEW */}
+      {tab === 'calendar' && (
+        <div style={{ marginTop: '20px' }}>
+          {/* Upcoming & Chronological Section */}
+          <div className="panel" style={{ marginBottom: '24px' }}>
+            <div className="panel-heading">
+              <div>
+                <h3>Upcoming Scheduled Assessments</h3>
+                <p>Chronological schedule with countdown and urgency color-coding</p>
+              </div>
+            </div>
+
+            {scheduledUpcoming.length > 0 ? (
+              <div className="exam-cards-grid">
+                {scheduledUpcoming.map(asm => {
+                  const course = getCourse(asm.courseId);
+                  const cd = getCountdownInfo(asm.scheduledAt);
+                  return (
+                    <div key={asm.id} className="exam-card">
+                      <div className="exam-card-header">
+                        <div>
+                          <span className="exam-card-course" style={{ color: course.accent }}>{course.code} · {course.name}</span>
+                          <div className="exam-card-title">{asm.title}</div>
+                        </div>
+                        <span className={`exam-countdown-badge ${cd.className}`}>
+                          {cd.label}
+                        </span>
+                      </div>
+
+                      <div className="exam-card-meta">
+                        <span className="badge badge-subtle">{asm.type}</span>
+                        <span className={`badge ${asm.status === 'confirmed' ? 'badge-green' : 'badge-yellow'}`}>
+                          {asm.status}
+                        </span>
+                        {asm.weightagePercent !== null && asm.weightagePercent !== undefined && (
+                          <span className="badge badge-subtle">{asm.weightagePercent}% weight</span>
+                        )}
+                        {typeof asm.marksObtained === 'number' && typeof asm.maxMarks === 'number' && (
+                          <span className="marks-pct-pill good">
+                            {asm.marksObtained}/{asm.maxMarks} ({Math.round((asm.marksObtained/asm.maxMarks)*100)}%)
+                          </span>
+                        )}
+                      </div>
+
+                      {asm.syllabus && (
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                          <b>Syllabus:</b> {asm.syllabus}
+                        </div>
+                      )}
+
+                      {asm.notes && (
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                          <b>Notes:</b> {asm.notes}
+                        </div>
+                      )}
+
+                      <div className="exam-card-actions">
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                          {fmtDate(asm.scheduledAt?.slice(0, 10))} {asm.scheduledAt?.length > 10 ? asm.scheduledAt.slice(11, 16) : ''}
+                        </span>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button className="btn btn-secondary btn-sm" onClick={() => onEditAssessment(asm)} title="Edit details & marks">
+                            Edit
+                          </button>
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => {
+                              onEditAssessment({ ...asm, status: 'completed' });
+                            }}
+                          >
+                            Mark Completed
+                          </button>
+                          <button className="icon-btn-sm danger-icon" onClick={() => onDeleteAssessment(asm.id)} title="Delete assessment">
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <div className="empty-icon"><CalendarDays size={24} /></div>
+                <h3>No upcoming scheduled assessments</h3>
+                <p>Add a date to unannounced assessments below or click "+ Add Assessment".</p>
+              </div>
+            )}
+          </div>
+
+          {/* Date Not Announced Section */}
+          <div className="panel">
+            <div className="panel-heading">
+              <div>
+                <h3>Date Not Announced</h3>
+                <p>Curriculum assessments whose exam date has not been officially declared</p>
+              </div>
+            </div>
+
+            {dateNotAnnounced.length > 0 ? (
+              <div className="exam-cards-grid">
+                {dateNotAnnounced.map(asm => {
+                  const course = getCourse(asm.courseId);
+                  return (
+                    <div key={asm.id} className="exam-card" style={{ background: 'var(--bg-subtle)' }}>
+                      <div className="exam-card-header">
+                        <div>
+                          <span className="exam-card-course" style={{ color: course.accent }}>{course.code} · {course.name}</span>
+                          <div className="exam-card-title">{asm.title}</div>
+                        </div>
+                        <span className="exam-countdown-badge tentative">
+                          Date TBA
+                        </span>
+                      </div>
+
+                      <div className="exam-card-meta">
+                        <span className="badge badge-subtle">{asm.type}</span>
+                        <span className="badge badge-subtle">{asm.status}</span>
+                        {asm.weightagePercent && <span className="badge badge-subtle">{asm.weightagePercent}% weight</span>}
+                      </div>
+
+                      <div className="exam-card-actions">
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Date not announced</span>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button className="btn btn-secondary btn-sm" onClick={() => onEditAssessment(asm)}>
+                            Set Date
+                          </button>
+                          <button className="icon-btn-sm danger-icon" onClick={() => onDeleteAssessment(asm.id)}>
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <p>All assessments currently have dates scheduled.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: MARKS & PERFORMANCE HISTORY */}
+      {tab === 'marks' && (
+        <div style={{ marginTop: '20px' }}>
+          <div className="panel">
+            <div className="panel-heading">
+              <div>
+                <h3>Marks and Past Assessment Performance</h3>
+                <p>Verified scores and trends. Blanks mean "not entered", never zero.</p>
+              </div>
+            </div>
+
+            <div className="marks-table-container">
+              <table className="marks-table">
+                <thead>
+                  <tr>
+                    <th>Course</th>
+                    <th>Assessment</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Marks Obtained</th>
+                    <th>Max Marks</th>
+                    <th>Percentage</th>
+                    <th>Weightage</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredAssessments.map(asm => {
+                    const course = getCourse(asm.courseId);
+                    const hasMarks = typeof asm.marksObtained === 'number' && typeof asm.maxMarks === 'number' && asm.maxMarks > 0;
+                    const pct = hasMarks ? Math.round((asm.marksObtained / asm.maxMarks) * 1000) / 10 : null;
+                    return (
+                      <tr key={asm.id}>
+                        <td>
+                          <b style={{ color: course.accent }}>{course.code}</b>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{course.name}</div>
+                        </td>
+                        <td><b>{asm.title}</b></td>
+                        <td><span className="badge badge-subtle">{asm.type}</span></td>
+                        <td>{asm.scheduledAt ? fmtDate(asm.scheduledAt.slice(0, 10)) : <span className="muted">TBA</span>}</td>
+                        <td>
+                          {typeof asm.marksObtained === 'number' ? (
+                            <b>{asm.marksObtained}</b>
+                          ) : (
+                            <span className="muted">—</span>
+                          )}
+                        </td>
+                        <td>
+                          {typeof asm.maxMarks === 'number' ? (
+                            <span>{asm.maxMarks}</span>
+                          ) : (
+                            <span className="muted">—</span>
+                          )}
+                        </td>
+                        <td>
+                          {pct !== null ? (
+                            <span className={`marks-pct-pill ${pct >= 75 ? 'good' : pct >= 50 ? 'medium' : 'poor'}`}>
+                              {pct}%
+                            </span>
+                          ) : (
+                            <span className="marks-pct-pill empty">—</span>
+                          )}
+                        </td>
+                        <td>
+                          {asm.weightagePercent !== null && asm.weightagePercent !== undefined ? `${asm.weightagePercent}%` : <span className="muted">—</span>}
+                        </td>
+                        <td>
+                          <button className="btn btn-secondary btn-sm" onClick={() => onEditAssessment(asm)}>
+                            {hasMarks ? 'Edit Marks' : 'Enter Marks'}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: SUBJECT PRIORITY & HEALTH */}
+      {tab === 'priority' && (
+        <div style={{ marginTop: '20px' }}>
+          <div className="truth-banner" style={{ marginBottom: '20px' }}>
+            <Sparkles size={20} />
+            <div>
+              <b>Explainable Priority Model (0–100)</b>
+              <span>
+                Priority = 35% Weakness + 25% Exam Urgency + 20% Backlog + 10% Syllabus Incomplete + 10% Stale Class Log.
+                Scores are grounded strictly in your logged data, never web heuristics.
+              </span>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '20px' }}>
+            {courses.map(course => {
+              const priority = computePriorityScore(
+                course, assessments, data.tasks, data.classLog, data.holidays, today, data.slots, data.mappings
+              );
+              const pillClass = priority.effectiveLabel.toLowerCase().replace(/\s+/g, '-');
+
+              return (
+                <div key={course.id} className="priority-score-card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: course.accent }}>{course.code}</span>
+                      <h3 style={{ margin: '2px 0 0 0', fontSize: '16px' }}>{course.name}</h3>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{course.instructor || 'Faculty'}</span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span className={`priority-pill ${pillClass}`}>
+                        {priority.effectiveLabel}
+                      </span>
+                      {priority.isProvisional && (
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                          (Provisional)
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+                      <span><b>Priority Score</b></span>
+                      <b>{priority.score} / 100</b>
+                    </div>
+                    <div className="priority-meter-bar">
+                      <div
+                        className="priority-meter-fill"
+                        style={{
+                          width: `${priority.score}%`,
+                          background: priority.score >= 70 ? 'var(--accent-red)' : priority.score >= 50 ? 'var(--accent-orange)' : priority.score >= 25 ? 'var(--accent-blue)' : 'var(--accent-green)'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Breakdown details */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid var(--border-subtle)', paddingTop: '12px' }}>
+                    <div className="breakdown-row">
+                      <span>Weakness ({priority.breakdown.weakness.weight}%)</span>
+                      <div className="breakdown-progress-track">
+                        <div className="breakdown-progress-val" style={{ width: `${priority.breakdown.weakness.score}%` }} />
+                      </div>
+                      <span style={{ textAlign: 'right' }}>{priority.breakdown.weakness.score}%</span>
+                    </div>
+
+                    <div className="breakdown-row">
+                      <span>Urgency ({priority.breakdown.examUrgency.weight}%)</span>
+                      <div className="breakdown-progress-track">
+                        <div className="breakdown-progress-val" style={{ width: `${priority.breakdown.examUrgency.score}%` }} />
+                      </div>
+                      <span style={{ textAlign: 'right' }}>{priority.breakdown.examUrgency.score}%</span>
+                    </div>
+
+                    <div className="breakdown-row">
+                      <span>Backlog ({priority.breakdown.backlog.weight}%)</span>
+                      <div className="breakdown-progress-track">
+                        <div className="breakdown-progress-val" style={{ width: `${priority.breakdown.backlog.score}%` }} />
+                      </div>
+                      <span style={{ textAlign: 'right' }}>{priority.breakdown.backlog.score}%</span>
+                    </div>
+
+                    <div className="breakdown-row">
+                      <span>Incomplete ({priority.breakdown.syllabus.weight}%)</span>
+                      <div className="breakdown-progress-track">
+                        <div className="breakdown-progress-val" style={{ width: `${priority.breakdown.syllabus.score}%` }} />
+                      </div>
+                      <span style={{ textAlign: 'right' }}>{priority.breakdown.syllabus.score}%</span>
+                    </div>
+
+                    <div className="breakdown-row">
+                      <span>Stale Log ({priority.breakdown.staleLog.weight}%)</span>
+                      <div className="breakdown-progress-track">
+                        <div className="breakdown-progress-val" style={{ width: `${priority.breakdown.staleLog.score}%`, background: priority.unloggedDays > 2 ? 'var(--accent-red)' : 'var(--accent-green)' }} />
+                      </div>
+                      <span style={{ textAlign: 'right' }}>{priority.breakdown.staleLog.score}%</span>
+                    </div>
+                  </div>
+
+                  {/* Interactive Evidence Controls */}
+                  <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
+                      <span>Confidence Level: <b>{course.confidence || 3} / 5</b></span>
+                      <div style={{ display: 'flex', gap: '3px' }}>
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <button
+                            key={star}
+                            className={`btn btn-sm ${(course.confidence || 3) === star ? 'btn-primary' : 'btn-secondary'}`}
+                            style={{ padding: '2px 7px', fontSize: '10px' }}
+                            onClick={() => {
+                              onUpdate(d => ({
+                                ...d,
+                                courses: d.courses.map(c => c.id === course.id ? { ...c, confidence: star } : c)
+                              }));
+                            }}
+                          >
+                            {star}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
+                      <span>Syllabus Covered: <b>{course.syllabusCompletion || 0}%</b></span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={course.syllabusCompletion || 0}
+                        onChange={e => {
+                          const val = Number(e.target.value);
+                          onUpdate(d => ({
+                            ...d,
+                            courses: d.courses.map(c => c.id === course.id ? { ...c, syllabusCompletion: val } : c)
+                          }));
+                        }}
+                        style={{ width: '120px' }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
+                      <span>Manual Override:</span>
+                      <select
+                        value={course.manualPriorityOverride || ''}
+                        onChange={e => {
+                          const val = e.target.value || null;
+                          onUpdate(d => ({
+                            ...d,
+                            courses: d.courses.map(c => c.id === course.id ? { ...c, manualPriorityOverride: val } : c)
+                          }));
+                        }}
+                        style={{ fontSize: '11px', padding: '3px 6px' }}
+                      >
+                        <option value="">Auto ({priority.autoLabel})</option>
+                        <option value="Must do">Must do</option>
+                        <option value="High">High</option>
+                        <option value="Normal">Normal</option>
+                        <option value="Maintain">Maintain</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ==========================================
 // MODAL MANAGER & SUPABASE SETUP MODAL
 // ==========================================
-function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, onSlot, onMapping, user, setUser, setToast }) {
+function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, onSlot, onMapping, onAssessment, user, setUser, setToast }) {
   const [supabaseUrl, setSupabaseUrl] = useState(getStoredSupabaseConfig().url || '');
   const [supabaseKey, setSupabaseKey] = useState(getStoredSupabaseConfig().key || 'sb_publishable_g6f2zn68OSWM8Hmnf1PhQg_JiTw01AX');
   const [testResult, setTestResult] = useState(null);
@@ -2033,6 +2854,22 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
   const [classTopic, setClassTopic] = useState('');
   const [classNotes, setClassNotes] = useState('');
   const [classAttended, setClassAttended] = useState(true);
+  const [classStatus, setClassStatus] = useState('completed');
+
+  // Assessment form state
+  const existingAsm = modal.assessment || null;
+  const [asmCourseId, setAsmCourseId] = useState(existingAsm?.courseId || modal.courseId || data.courses[0]?.id || '');
+  const [asmTitle, setAsmTitle] = useState(existingAsm?.title || 'Quiz 1');
+  const [asmType, setAsmType] = useState(existingAsm?.type || 'Quiz 1');
+  const [asmScheduledAt, setAsmScheduledAt] = useState(existingAsm?.scheduledAt ? existingAsm.scheduledAt.slice(0, 16) : '');
+  const [asmStatus, setAsmStatus] = useState(existingAsm?.status || 'tentative');
+  const [asmMarksObtained, setAsmMarksObtained] = useState(existingAsm?.marksObtained !== null && existingAsm?.marksObtained !== undefined ? existingAsm.marksObtained : '');
+  const [asmMaxMarks, setAsmMaxMarks] = useState(existingAsm?.maxMarks !== null && existingAsm?.maxMarks !== undefined ? existingAsm.maxMarks : '');
+  const [asmWeightage, setAsmWeightage] = useState(existingAsm?.weightagePercent !== null && existingAsm?.weightagePercent !== undefined ? existingAsm.weightagePercent : '');
+  const [asmExtraCredit, setAsmExtraCredit] = useState(!!existingAsm?.extraCredit);
+  const [asmSyllabus, setAsmSyllabus] = useState(existingAsm?.syllabus || '');
+  const [asmNotes, setAsmNotes] = useState(existingAsm?.notes || '');
+  const [asmError, setAsmError] = useState('');
 
   // Slot form state
   const [slotCode, setSlotCode] = useState('');
@@ -2107,13 +2944,15 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
               {modal.type === 'supabase' ? 'CLOUD & DATABASE CONFIG' :
                modal.type === 'task' ? 'REVISION WORKSPACE' :
                modal.type === 'topic' ? 'KNOWLEDGE BASE' :
-               modal.type === 'class' ? 'LECTURE CAPTURE' : 'CONFIGURATION'}
+               modal.type === 'class' ? 'LECTURE CAPTURE' :
+               modal.type === 'assessment' ? 'EXAM & PERFORMANCE TRACKER' : 'CONFIGURATION'}
             </div>
             <h2>
               {modal.type === 'supabase' ? 'Supabase Sync Setup' :
                modal.type === 'task' ? 'Add Revision Task' :
                modal.type === 'topic' ? 'Log Lecture Topic' :
                modal.type === 'class' ? `Log Lecture: ${modal.slot?.code}` :
+               modal.type === 'assessment' ? (modal.assessment ? `Edit Assessment: ${modal.assessment.title}` : 'Add New Assessment') :
                modal.type === 'slot' ? 'Add Timetable Slot' :
                modal.type === 'mapping' ? `Map Schedule Code: ${modal.code}` : 'Settings'}
             </h2>
@@ -2399,7 +3238,8 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
             onClass(modal.slot, {
               topic: classTopic,
               notes: classNotes,
-              attended: classAttended
+              attended: classStatus !== 'missed',
+              status: classStatus
             });
           }}>
             <div className="class-modal-banner">
@@ -2409,6 +3249,19 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
                 <span>{niceTime(modal.slot.start)}–{niceTime(modal.slot.end)} {modal.slot.room ? `· Room ${modal.slot.room}` : ''}</span>
               </div>
             </div>
+
+            <label>
+              Lecture Status
+              <select value={classStatus} onChange={e => {
+                setClassStatus(e.target.value);
+                setClassAttended(e.target.value !== 'missed');
+              }}>
+                <option value="completed">Completed (Lecture & notes logged)</option>
+                <option value="ongoing">Ongoing (Class in progress / partial notes)</option>
+                <option value="missed">Class missed</option>
+                <option value="not_logged">Not logged yet</option>
+              </select>
+            </label>
 
             <label>
               What was covered in this lecture?
@@ -2431,15 +3284,6 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
               />
             </label>
 
-            <label className="check-label">
-              <input
-                type="checkbox"
-                checked={classAttended}
-                onChange={e => setClassAttended(e.target.checked)}
-              />
-              I attended this lecture
-            </label>
-
             <p className="form-hint">
               If a topic is entered, Revision OS adds it to your Course Library and queues a same-day revision task.
             </p>
@@ -2447,6 +3291,186 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
             <div className="modal-actions">
               <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
               <button type="submit" className="btn btn-primary">Save Class Log</button>
+            </div>
+          </form>
+        )}
+
+        {/* Assessment Form Modal */}
+        {modal.type === 'assessment' && (
+          <form className="modal-form" onSubmit={e => {
+            e.preventDefault();
+            const numObtained = asmMarksObtained !== '' ? Number(asmMarksObtained) : null;
+            const numMax = asmMaxMarks !== '' ? Number(asmMaxMarks) : null;
+            const numWeight = asmWeightage !== '' ? Number(asmWeightage) : null;
+
+            if (numObtained !== null && numObtained < 0) {
+              setAsmError('Marks obtained cannot be negative');
+              return;
+            }
+            if (numMax !== null && numMax <= 0) {
+              setAsmError('Maximum marks must be greater than zero');
+              return;
+            }
+            if (numObtained !== null && numMax !== null && numObtained > numMax && !asmExtraCredit) {
+              setAsmError('Marks obtained cannot exceed maximum marks unless extra credit is enabled');
+              return;
+            }
+            if (numWeight !== null && (numWeight < 0 || numWeight > 100)) {
+              setAsmError('Weightage percentage must be between 0 and 100');
+              return;
+            }
+
+            onAssessment({
+              ...(modal.assessment || {}),
+              courseId: asmCourseId,
+              title: asmTitle.trim() || 'Assessment',
+              type: asmType,
+              scheduledAt: asmScheduledAt ? new Date(asmScheduledAt).toISOString() : null,
+              status: asmStatus,
+              marksObtained: numObtained,
+              maxMarks: numMax,
+              weightagePercent: numWeight,
+              extraCredit: asmExtraCredit,
+              syllabus: asmSyllabus.trim(),
+              notes: asmNotes.trim()
+            });
+          }}>
+            {asmError && (
+              <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px', borderRadius: '6px', marginBottom: '12px', fontSize: '12px' }}>
+                {asmError}
+              </div>
+            )}
+
+            <div className="form-grid">
+              <label>
+                Course
+                <select value={asmCourseId} onChange={e => setAsmCourseId(e.target.value)} required>
+                  {data.courses.map(c => (
+                    <option key={c.id} value={c.id}>{c.code} · {c.name}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                Assessment Title
+                <input
+                  type="text"
+                  value={asmTitle}
+                  onChange={e => setAsmTitle(e.target.value)}
+                  placeholder="e.g. Quiz 1, Midsem, Assignment 2"
+                  required
+                />
+              </label>
+            </div>
+
+            <div className="form-grid">
+              <label>
+                Assessment Type
+                <select value={asmType} onChange={e => setAsmType(e.target.value)}>
+                  <option value="Quiz 1">Quiz 1</option>
+                  <option value="Midsem">Midsem</option>
+                  <option value="Quiz 2">Quiz 2</option>
+                  <option value="Endsem">Endsem</option>
+                  <option value="Assignment">Assignment</option>
+                  <option value="Lab/Practical">Lab / Practical / Viva</option>
+                  <option value="Other">Other</option>
+                </select>
+              </label>
+
+              <label>
+                Scheduled Date & Time (Optional)
+                <input
+                  type="datetime-local"
+                  value={asmScheduledAt}
+                  onChange={e => setAsmScheduledAt(e.target.value)}
+                />
+              </label>
+            </div>
+
+            <div className="form-grid">
+              <label>
+                Status
+                <select value={asmStatus} onChange={e => setAsmStatus(e.target.value)}>
+                  <option value="tentative">Tentative</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="completed">Completed</option>
+                  <option value="postponed">Postponed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </label>
+
+              <label>
+                Weightage % (0–100)
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  value={asmWeightage}
+                  onChange={e => setAsmWeightage(e.target.value)}
+                  placeholder="e.g. 20"
+                />
+              </label>
+            </div>
+
+            <div className="form-grid">
+              <label>
+                Marks Obtained (Blank if not graded)
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={asmMarksObtained}
+                  onChange={e => setAsmMarksObtained(e.target.value)}
+                  placeholder="Leave blank if not entered"
+                />
+              </label>
+
+              <label>
+                Maximum Marks
+                <input
+                  type="number"
+                  min="0.5"
+                  step="0.5"
+                  value={asmMaxMarks}
+                  onChange={e => setAsmMaxMarks(e.target.value)}
+                  placeholder="e.g. 50"
+                />
+              </label>
+            </div>
+
+            <label className="check-label">
+              <input
+                type="checkbox"
+                checked={asmExtraCredit}
+                onChange={e => setAsmExtraCredit(e.target.checked)}
+              />
+              Allow extra-credit scoring (marks obtained may exceed max marks)
+            </label>
+
+            <label>
+              Syllabus / Topics Covered
+              <textarea
+                value={asmSyllabus}
+                onChange={e => setAsmSyllabus(e.target.value)}
+                placeholder="Chapters, lecture numbers, or specific topics included in this assessment…"
+                rows={2}
+              />
+            </label>
+
+            <label>
+              Preparation Notes, Room & Announcements
+              <textarea
+                value={asmNotes}
+                onChange={e => setAsmNotes(e.target.value)}
+                placeholder="Room number, formula sheets allowed, instructor instructions…"
+                rows={2}
+              />
+            </label>
+
+            <div className="modal-actions">
+              <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
+              <button type="submit" className="btn btn-primary">Save Assessment</button>
             </div>
           </form>
         )}
