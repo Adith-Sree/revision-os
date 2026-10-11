@@ -8,42 +8,45 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 
-  /* Google Stitch Color Palette: Warm Off-White, Navy, Muted Yellow, Restrained Green */
-  --bg-canvas: #fbfaf7;
+  /* Google Stitch Color Palette: M3 Editorial Academic Theme */
+  --bg-canvas: #f9f9f6;
   --bg-paper: #ffffff;
-  --bg-subtle: #f6f5f0;
+  --bg-subtle: #eeeeeb;
   --bg-card: #ffffff;
-  --line: #e8e6df;
-  --line-light: #f1efe9;
+  --line: #e2e3e0;
+  --line-light: #f4f4f1;
 
-  --ink-primary: #0f172a;
-  --ink-secondary: #334155;
-  --ink-muted: #64748b;
-  --ink-light: #94a3b8;
+  --ink-primary: #1a1c1b;
+  --ink-secondary: #554336;
+  --ink-muted: #887364;
+  --ink-light: #dbc2b0;
 
-  --navy: #1e3a5f;
-  --navy-dark: #0f243e;
-  --navy-light: #2d5584;
+  /* Primary Stitch Terracotta / Amber */
+  --navy: #8d4b00;
+  --navy-dark: #6e3900;
+  --navy-light: #b15f00;
+  --primary-fixed: #ffdcc3;
+  --on-primary-fixed: #2f1500;
 
-  --accent-yellow: #d97706;
-  --accent-yellow-bg: #fef3c7;
-  --accent-yellow-text: #92400e;
+  --accent-yellow: #b15f00;
+  --accent-yellow-bg: #ffdcc3;
+  --accent-yellow-text: #2f1500;
 
-  --accent-green: #15803d;
-  --accent-green-bg: #dcfce7;
-  --accent-green-text: #166534;
+  --accent-green: #006948;
+  --accent-green-bg: #85f8c4;
+  --accent-green-text: #002114;
 
-  --accent-red: #b91c1c;
-  --accent-red-bg: #fee2e2;
+  --accent-red: #ba1a1a;
+  --accent-red-bg: #ffdad6;
 
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
   --radius-full: 9999px;
 
-  --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
-  --shadow-card: 0 2px 6px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02);
-  --shadow-popover: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+  --shadow-subtle: 0 1px 4px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 8px rgba(0, 0, 0, 0.04);
+  --shadow-popover: 0 12px 36px -4px rgba(0, 0, 0, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
 }
 
 * {
