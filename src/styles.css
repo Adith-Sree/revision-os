@@ -2090,3 +2090,291 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   Holiday Mode, Exam Tracker, Marks & Subject Priority Components
+   ========================================================================== */
+
+.holiday-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  margin-bottom: 18px;
+}
+
+.holiday-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.holiday-banner-badge {
+  background: #0d9488;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.05em;
+}
+
+.holiday-banner-text b {
+  display: block;
+  font-size: 13px;
+  color: #115e59;
+}
+
+.holiday-banner-text span {
+  font-size: 11px;
+  color: #134e4a;
+}
+
+.holiday-active-badge {
+  background: #ccfbf1;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Priority Badge Component */
+.priority-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.priority-pill.must-do {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.priority-pill.high {
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
+
+.priority-pill.normal {
+  background: #e0e7ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+}
+
+.priority-pill.maintain {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+/* Exam Countdown Badges */
+.exam-countdown-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.exam-countdown-badge.overdue {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #f87171;
+}
+
+.exam-countdown-badge.urgent {
+  background: #ffedd5;
+  color: #c2410c;
+  border: 1px solid #fb923c;
+}
+
+.exam-countdown-badge.soon {
+  background: #fef9c3;
+  color: #854d0e;
+  border: 1px solid #fde047;
+}
+
+.exam-countdown-badge.confirmed {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.exam-countdown-badge.tentative {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+/* Exam Tracker Grid & Cards */
+.exam-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.exam-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.exam-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.exam-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.exam-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.exam-card-course {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.exam-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+}
+
+.exam-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: auto;
+}
+
+/* Marks Table */
+.marks-table-container {
+  overflow-x: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-top: 16px;
+}
+
+.marks-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.marks-table th {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  text-align: left;
+  padding: 10px 14px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.marks-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-color);
+}
+
+.marks-table tr:last-child td {
+  border-bottom: none;
+}
+
+.marks-pct-pill {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.marks-pct-pill.good { background: #dcfce7; color: #15803d; }
+.marks-pct-pill.medium { background: #fef3c7; color: #b45309; }
+.marks-pct-pill.poor { background: #fee2e2; color: #b91c1c; }
+.marks-pct-pill.empty { background: #f1f5f9; color: #64748b; }
+
+/* Subject Priority Breakdown */
+.priority-score-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.priority-meter-bar {
+  height: 8px;
+  background: var(--bg-subtle);
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+}
+
+.priority-meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.breakdown-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 60px;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+}
+
+.breakdown-progress-track {
+  height: 6px;
+  background: var(--bg-subtle);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.breakdown-progress-val {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent-orange);
+}
+
