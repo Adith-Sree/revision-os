@@ -3,3 +3,10 @@ dist/
 .env
 .env.local
 .DS_Store
+
+# Android / Capacitor
+android/.gradle/
+android/app/build/
+android/build/
+android/.idea/
+android/local.properties
