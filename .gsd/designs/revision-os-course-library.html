@@ -1,0 +1,764 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-tertiary-fixed": "#002114",
+          "outline": "#887364",
+          "surface-dim": "#dadad7",
+          "tertiary": "#006948",
+          "error": "#ba1a1a",
+          "primary-fixed-dim": "#ffb77d",
+          "on-tertiary-container": "#f5fff7",
+          "inverse-primary": "#ffb77d",
+          "surface-bright": "#f9f9f6",
+          "inverse-on-surface": "#f1f1ee",
+          "on-error-container": "#93000a",
+          "on-tertiary-fixed-variant": "#005137",
+          "primary-container": "#b15f00",
+          "primary": "#8d4b00",
+          "on-primary-fixed-variant": "#6e3900",
+          "surface-tint": "#904d00",
+          "surface-container-low": "#f4f4f1",
+          "tertiary-container": "#00855d",
+          "primary-fixed": "#ffdcc3",
+          "on-tertiary": "#ffffff",
+          "surface-container-highest": "#e2e3e0",
+          "on-surface-variant": "#554336",
+          "secondary-fixed-dim": "#bcc7de",
+          "surface": "#f9f9f6",
+          "outline-variant": "#dbc2b0",
+          "on-secondary-container": "#586377",
+          "on-secondary": "#ffffff",
+          "tertiary-fixed": "#85f8c4",
+          "surface-variant": "#e2e3e0",
+          "background": "#f9f9f6",
+          "inverse-surface": "#2f312f",
+          "on-secondary-fixed": "#111c2d",
+          "on-surface": "#1a1c1b",
+          "on-error": "#ffffff",
+          "surface-container-lowest": "#ffffff",
+          "surface-container-high": "#e8e8e5",
+          "secondary-fixed": "#d8e3fb",
+          "on-background": "#1a1c1b",
+          "on-primary-container": "#fffbff",
+          "tertiary-fixed-dim": "#68dba9",
+          "on-primary": "#ffffff",
+          "on-secondary-fixed-variant": "#3c475a",
+          "error-container": "#ffdad6",
+          "secondary-container": "#d5e0f8",
+          "on-primary-fixed": "#2f1500",
+          "surface-container": "#eeeeeb",
+          "secondary": "#545f73"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.125rem",
+          "lg": "0.25rem",
+          "xl": "0.5rem",
+          "full": "0.75rem"
+        },
+        "spacing": {
+          "gutter-desktop": "1.5rem",
+          "space-lg": "1.5rem",
+          "margin": "1rem",
+          "margin-desktop": "2rem",
+          "space-xl": "2.25rem",
+          "space-md": "1rem",
+          "gutter": "1rem",
+          "space-sm": "0.5rem",
+          "space-xs": "0.25rem"
+        },
+        "fontFamily": {
+          "label-status": [
+            "Inter"
+          ],
+          "body-sm": [
+            "Inter"
+          ],
+          "headline-lg": [
+            "Inter"
+          ],
+          "metric-display": [
+            "Inter"
+          ],
+          "headline-sm": [
+            "Inter"
+          ],
+          "headline-md": [
+            "Inter"
+          ],
+          "body-md": [
+            "Inter"
+          ],
+          "label-code": [
+            "JetBrains Mono"
+          ],
+          "body-lg": [
+            "Inter"
+          ],
+          "headline-xl": [
+            "Inter"
+          ]
+        },
+        "fontSize": {
+          "label-status": [
+            "0.6875rem",
+            {
+              "lineHeight": "0.875rem",
+              "letterSpacing": "0.04em",
+              "fontWeight": "600"
+            }
+          ],
+          "body-sm": [
+            "0.75rem",
+            {
+              "lineHeight": "1.25rem",
+              "fontWeight": "400"
+            }
+          ],
+          "headline-lg": [
+            "1.5rem",
+            {
+              "lineHeight": "2rem",
+              "letterSpacing": "-0.02em",
+              "fontWeight": "600"
+            }
+          ],
+          "metric-display": [
+            "1.75rem",
+            {
+              "lineHeight": "2rem",
+              "letterSpacing": "-0.02em",
+              "fontWeight": "600"
+            }
+          ],
+          "headline-sm": [
+            "1.125rem",
+            {
+              "lineHeight": "1.5rem",
+              "letterSpacing": "-0.01em",
+              "fontWeight": "500"
+            }
+          ],
+          "headline-md": [
+            "1.25rem",
+            {
+              "lineHeight": "1.75rem",
+              "letterSpacing": "-0.015em",
+              "fontWeight": "600"
+            }
+          ],
+          "body-md": [
+            "0.875rem",
+            {
+              "lineHeight": "1.45rem",
+              "fontWeight": "400"
+            }
+          ],
+          "label-code": [
+            "0.75rem",
+            {
+              "lineHeight": "1rem",
+              "letterSpacing": "0.02em",
+              "fontWeight": "500"
+            }
+          ],
+          "body-lg": [
+            "1rem",
+            {
+              "lineHeight": "1.625rem",
+              "fontWeight": "400"
+            }
+          ],
+          "headline-xl": [
+            "2rem",
+            {
+              "lineHeight": "2.5rem",
+              "letterSpacing": "-0.025em",
+              "fontWeight": "600"
+            }
+          ]
+        }
+      },
+    },
+  }</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-[260px] bg-surface-container-low shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="p-space-md"><div class="flex items-center gap-space-sm pb-space-sm mb-space-sm"><img alt="Revision OS Monogram" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WZwO5i05MghQme8ZmqPBfW4l7t_sqULfrCr0Nwy7tc5upytQIaC_JK5WpMiPCmv_2mw0BSMvfmRPace74hh2mPxCGjR1-RwCYjRl_O3Z9RLBNyVrcGXH5_m58v0ALOeFzFParFtNBFpDZZCfzakuPXTk7rc1eX0ZLSHfQWTRojGKIeqNfr79u9UMLahqCv5VVkwBxzEkIIZj6graPNNaBfS59IqRgYf12OAr798BY5xdAYSyDYOFb61A"><div class="flex flex-col"><span class="font-headline-sm text-headline-sm tracking-tight text-on-surface font-semibold">Revision OS</span><span class="font-label-code text-label-code text-on-surface-variant">IITG • Mechanical Engg.</span></div></div><div class="bg-surface-container p-space-sm rounded-lg mb-space-md"><div class="flex items-center justify-between mb-space-xs"><span class="font-label-status text-label-status text-primary uppercase">Spring 2025 • Sem VI</span><span class="font-label-code text-label-code text-on-surface-variant">W08/14</span></div><div class="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden"><div class="bg-primary h-full w-[57%]"></div></div><div class="flex justify-between items-center mt-space-xs"><span class="font-body-sm text-body-sm text-on-surface-variant">Term Elapsed</span><span class="font-label-code text-label-code text-on-surface">57.1%</span></div></div><button class="w-full bg-surface-container-highest hover:bg-surface-container-high text-on-surface transition-colors py-space-xs px-space-sm rounded-lg flex items-center justify-between mb-space-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]" type="button"><span class="flex items-center gap-space-xs font-body-md text-body-md font-medium text-primary"><span class="material-symbols-outlined text-[18px]">add</span>Log Lecture</span><kbd class="font-label-code text-label-code text-on-surface-variant bg-surface px-1.5 py-0.5 rounded">⌘L</kbd></button><div class="mb-space-xs"><span class="font-label-status text-label-status uppercase text-on-surface-variant px-space-xs tracking-wider">Academic Suite</span></div><nav class="flex flex-col gap-0.5 mb-space-md" data-active-classes="bg-surface-container-high text-on-surface font-semibold"><a class="flex items-center justify-between px-space-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="dashboard" href="#"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="font-body-md text-body-md">Dashboard</span></div></a><a class="flex items-center justify-between px-space-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="timetable" href="#"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[20px]">calendar_today</span><span class="font-body-md text-body-md">Timetable</span></div><span class="font-label-code text-label-code bg-surface-container text-on-surface-variant px-1.5 py-0.5 rounded">Today: 4 slots</span></a><a aria-current="page" class="flex items-center justify-between px-space-sm py-2 rounded-lg transition-colors bg-surface-container-high text-on-surface font-semibold" data-path="course-library" href="#"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[20px]">menu_book</span><span class="font-body-md text-body-md">Course Library</span></div><span class="font-label-code text-label-code bg-surface-container text-on-surface-variant px-1.5 py-0.5 rounded">5 Courses</span></a><a class="flex items-center justify-between px-space-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="revision-planner" href="#"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[20px]">update</span><span class="font-body-md text-body-md">Revision Planner</span></div><span class="font-label-code text-label-code bg-primary-fixed text-on-primary-fixed px-1.5 py-0.5 rounded font-semibold">3 Due</span></a><a class="flex items-center justify-between px-space-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="analytics" href="#"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[20px]">analytics</span><span class="font-body-md text-body-md">Analytics</span></div></a></nav><div class="mb-space-xs"><span class="font-label-status text-label-status uppercase text-on-surface-variant px-space-xs tracking-wider">Technical Logs</span></div><div class="flex flex-col gap-0.5"><a class="flex items-center gap-space-xs px-space-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="backlog-vault" href="#"><span class="material-symbols-outlined text-[20px]">archive</span><span class="font-body-md text-body-md">Backlog Vault</span></a><a class="flex items-center gap-space-xs px-space-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="lab-submissions" href="#"><span class="material-symbols-outlined text-[20px]">science</span><span class="font-body-md text-body-md">Lab Submissions</span></a></div></div><div class="p-space-md bg-surface-container"><div class="flex items-center gap-space-xs mb-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbOcknwXPgrDBimN_P3nvY1Df9hMWSQf2eSYiHna5OO4v3b0ro0PSInFM9Rn-TTHZawNtvfKihSGCWh0pD3iZQjAMGd0iLhDVZ-OezM4QCvGT0dG66swqZalIXdCqgw7yez_BbdPf3Lr7SWxxdPOeF8jWzgETGcGh1m86yz_ff9OkF9jqDEQ993u3-vuoMtUvOTQpMvZnXrpvAbvN2J-MZ2gJvy4S3Fi_D4LK7FZRXFhCa3ZmR3w6X"><div class="flex flex-col min-w-0 flex-1"><span class="font-body-md text-body-md font-semibold text-on-surface truncate">Aarav Sharma</span><span class="font-label-code text-label-code text-on-surface-variant">Roll 210103042</span></div></div><div class="flex items-center gap-1.5 pt-space-xs text-tertiary font-label-code text-label-code"><span class="w-1.5 h-1.5 rounded-full bg-tertiary-container animate-pulse"></span><span>Synced with Webmail (12m ago)</span></div></div></aside><div class="pl-[260px]"><header class="fixed top-0 left-[260px] right-0 h-16 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 px-space-lg flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md flex-1 max-w-xl"><div class="flex items-center gap-1.5 font-label-code text-label-code text-on-surface-variant whitespace-nowrap"><span class="hover:text-on-surface cursor-pointer">ME 6th Sem</span><span>/</span><span class="text-on-surface font-semibold">Overview</span></div><div class="relative flex-1 max-w-md"><span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant">search</span><input class="w-full bg-surface-container-low text-on-surface placeholder:text-on-surface-variant font-body-sm text-body-sm pl-8 pr-12 py-1.5 rounded-lg outline-none focus:bg-surface-container-lowest transition-all shadow-[0_1px_8px_rgba(0,0,0,0.02)]" placeholder="Search lecture notes, ME course codes, equations..." type="text"><kbd class="absolute right-2 top-1/2 -translate-y-1/2 font-label-code text-label-code text-on-surface-variant bg-surface px-1.5 py-0.5 rounded pointer-events-none">⌘K</kbd></div></div><div class="flex items-center gap-space-md"><div class="hidden xl:flex flex-col text-right"><span class="font-body-sm text-body-sm font-medium text-on-surface">Wednesday, March 12, 2025</span><span class="font-label-code text-label-code text-on-surface-variant">Day 48 of Term</span></div><div class="flex items-center gap-space-xs"><button class="flex items-center gap-1 px-space-sm py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container text-on-surface font-body-sm text-body-sm font-medium transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">add_circle</span><span class="hidden md:inline">Quick Topic</span></button><button class="flex items-center gap-1.5 px-space-sm py-1.5 rounded-lg bg-primary-container text-on-primary-container font-body-sm text-body-sm font-medium hover:bg-primary transition-colors shadow-[0_1px_8px_rgba(0,0,0,0.04)]" type="button"><span class="material-symbols-outlined text-[16px]">schedule</span><span>Queue (3)</span></button><button class="p-1.5 rounded-lg hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors relative" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error"></span></button></div></div></header><main class="w-full pt-16 bg-surface px-gutter-desktop min-h-screen"><div class="flex flex-col w-full pb-16">
+<!-- Top Command & Metric Bar -->
+<div class="flex flex-col xl:flex-row xl:items-end justify-between gap-space-lg mb-space-lg">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-space-xs text-primary font-label-code text-label-code">
+<span class="w-2 h-2 rounded-full bg-primary inline-block"></span>
+<span class="uppercase tracking-widest font-semibold">Repository Master Register</span>
+<span class="text-on-surface-variant">• ME Core Term VI</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-on-surface font-semibold tracking-tight">Course Library &amp; Lecture Repository</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">5 Core Engineering Courses • 72 Total Topics • 54 Topics Covered (75% Syllabus)</p>
+</div>
+<!-- Quick Action / Global Filter Tools -->
+<div class="flex flex-wrap items-center gap-space-sm">
+<div class="relative min-w-[260px] flex-1 sm:flex-initial">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant font-body-sm text-body-sm pl-9 pr-10 py-2 rounded-lg outline-none shadow-sm focus:bg-surface-bright transition-all" placeholder="Search notes, slides, equations..." type="text">
+<kbd class="absolute right-2.5 top-1/2 -translate-y-1/2 font-label-code text-label-code text-on-surface-variant bg-surface-container px-1 py-0.5 rounded">⌘F</kbd>
+</div>
+<div class="flex items-center bg-surface-container-lowest rounded-lg p-0.5 shadow-sm">
+<button class="px-space-sm py-1.5 rounded-lg bg-surface-container-high text-on-surface font-body-sm text-body-sm font-medium flex items-center gap-1 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">tune</span>
+<span>Status</span>
+</button>
+<button class="px-space-sm py-1.5 rounded-lg hover:bg-surface-container-low text-on-surface-variant font-body-sm text-body-sm transition-colors flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">sort</span>
+<span>Due Next</span>
+</button>
+</div>
+<button class="px-space-md py-2 rounded-lg bg-primary text-on-primary font-body-sm text-body-sm font-medium hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>Add New Topic</span>
+</button>
+</div>
+</div>
+<!-- Micro Visual Summary: Global Curriculum Health Sparkline -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm mb-space-lg flex flex-col lg:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md w-full lg:w-auto">
+<div class="w-12 h-12 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[26px]">insights</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface">Curriculum Vector Index</span>
+<span class="font-label-code text-label-code px-1.5 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-semibold">91.4% Target Pacing</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Optimal Spaced Retrievability: 48 topics locked in Box 3+ interval</p>
+</div>
+</div>
+<!-- Inline SVG Sparkline -->
+<div class="w-full lg:w-72 h-10 flex items-end gap-1.5">
+<div class="flex-1 bg-surface-container-high rounded-t-sm h-[40%] hover:bg-primary/70 transition-colors" title="ME 301 (72%)"></div>
+<div class="flex-1 bg-surface-container-high rounded-t-sm h-[55%] hover:bg-primary/70 transition-colors" title="ME 305 (68%)"></div>
+<div class="flex-1 bg-surface-container-high rounded-t-sm h-[75%] hover:bg-primary/70 transition-colors" title="ME 302 (75%)"></div>
+<div class="flex-1 bg-surface-container-high rounded-t-sm h-[80%] hover:bg-primary/70 transition-colors" title="ME 307 (78%)"></div>
+<div class="flex-1 bg-primary rounded-t-sm h-[92%] shadow-sm" title="ME 308 (80% Covered, 86% Retained)"></div>
+<div class="flex-1 bg-surface-container-high rounded-t-sm h-[30%]"></div>
+<div class="flex-1 bg-surface-container-high rounded-t-sm h-[45%]"></div>
+<div class="flex-1 bg-surface-container-high rounded-t-sm h-[60%]"></div>
+</div>
+<div class="flex items-center gap-space-lg w-full lg:w-auto justify-between lg:justify-end">
+<div class="text-right">
+<span class="font-label-status text-label-status uppercase text-on-surface-variant block">Cumulative Recall</span>
+<span class="font-metric-display text-metric-display text-tertiary font-semibold">84.4%</span>
+</div>
+<div class="text-right">
+<span class="font-label-status text-label-status uppercase text-on-surface-variant block">Open Backlogs</span>
+<span class="font-metric-display text-metric-display text-error font-semibold">02</span>
+</div>
+</div>
+</div>
+<!-- Course Cards Grid (Top Overview) -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-space-sm mb-space-xl">
+<!-- Card 1: ME 308 (Active Selected State) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-md flex flex-col justify-between relative overflow-hidden transition-all duration-150 cursor-pointer group">
+<div class="absolute top-0 left-0 right-0 h-1 bg-primary"></div>
+<div>
+<div class="flex items-start justify-between gap-space-xs mb-2">
+<span class="font-label-code text-label-code font-bold uppercase tracking-wider text-primary px-2 py-0.5 rounded bg-primary-fixed">ME 308</span>
+<span class="font-label-code text-label-code text-on-surface-variant">4.0 CR</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm font-semibold text-on-surface group-hover:text-primary transition-colors line-clamp-1 mb-1">Heat &amp; Mass Transfer</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant block mb-space-md">18 Topics Logged</span>
+</div>
+<div class="flex flex-col gap-2 pt-space-xs">
+<div class="flex justify-between items-center font-label-code text-label-code">
+<span class="text-on-surface-variant">Syllabus</span>
+<span class="font-semibold text-on-surface">80%</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[80%] rounded-full"></div>
+</div>
+<div class="flex justify-between items-center font-label-code text-label-code mt-1">
+<span class="text-tertiary flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>86% Retained
+          </span>
+<span class="text-primary font-semibold flex items-center">Active</span>
+</div>
+</div>
+</div>
+<!-- Card 2: ME 301 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm hover:shadow-md flex flex-col justify-between transition-all duration-150 cursor-pointer group">
+<div>
+<div class="flex items-start justify-between gap-space-xs mb-2">
+<span class="font-label-code text-label-code font-bold uppercase tracking-wider text-on-surface-variant px-2 py-0.5 rounded bg-surface-container-high">ME 301</span>
+<span class="font-label-code text-label-code text-on-surface-variant">4.0 CR</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm font-semibold text-on-surface group-hover:text-primary transition-colors line-clamp-1 mb-1">Applied Thermodynamics</h2>
+<div class="flex items-center gap-1.5 mb-space-md">
+<span class="font-body-sm text-body-sm text-on-surface-variant">16 Topics</span>
+<span class="text-on-surface-variant">•</span>
+<span class="font-label-status text-label-status px-1.5 py-0.2 rounded bg-error-container text-on-error-container font-semibold">1 Backlog</span>
+</div>
+</div>
+<div class="flex flex-col gap-2 pt-space-xs">
+<div class="flex justify-between items-center font-label-code text-label-code">
+<span class="text-on-surface-variant">Syllabus</span>
+<span class="font-semibold text-on-surface">72%</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden">
+<div class="bg-surface-tint h-full w-[72%] rounded-full"></div>
+</div>
+<div class="flex justify-between items-center font-label-code text-label-code mt-1">
+<span class="text-tertiary flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>78% Retained
+          </span>
+<span class="text-on-surface-variant">Box 3 Avg</span>
+</div>
+</div>
+</div>
+<!-- Card 3: ME 302 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm hover:shadow-md flex flex-col justify-between transition-all duration-150 cursor-pointer group">
+<div>
+<div class="flex items-start justify-between gap-space-xs mb-2">
+<span class="font-label-code text-label-code font-bold uppercase tracking-wider text-on-surface-variant px-2 py-0.5 rounded bg-surface-container-high">ME 302</span>
+<span class="font-label-code text-label-code text-on-surface-variant">4.0 CR</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm font-semibold text-on-surface group-hover:text-primary transition-colors line-clamp-1 mb-1">Kinematics &amp; Dynamics</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant block mb-space-md">15 Topics Logged</span>
+</div>
+<div class="flex flex-col gap-2 pt-space-xs">
+<div class="flex justify-between items-center font-label-code text-label-code">
+<span class="text-on-surface-variant">Syllabus</span>
+<span class="font-semibold text-on-surface">75%</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden">
+<div class="bg-surface-tint h-full w-[75%] rounded-full"></div>
+</div>
+<div class="flex justify-between items-center font-label-code text-label-code mt-1">
+<span class="text-tertiary flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>89% Retained
+          </span>
+<span class="text-tertiary font-semibold">Prime</span>
+</div>
+</div>
+</div>
+<!-- Card 4: ME 305 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm hover:shadow-md flex flex-col justify-between transition-all duration-150 cursor-pointer group">
+<div>
+<div class="flex items-start justify-between gap-space-xs mb-2">
+<span class="font-label-code text-label-code font-bold uppercase tracking-wider text-on-surface-variant px-2 py-0.5 rounded bg-surface-container-high">ME 305</span>
+<span class="font-label-code text-label-code text-on-surface-variant">3.0 CR</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm font-semibold text-on-surface group-hover:text-primary transition-colors line-clamp-1 mb-1">Fluid Dynamics</h2>
+<div class="flex items-center gap-1.5 mb-space-md">
+<span class="font-body-sm text-body-sm text-on-surface-variant">14 Topics</span>
+<span class="text-on-surface-variant">•</span>
+<span class="font-label-status text-label-status px-1.5 py-0.2 rounded bg-error-container text-on-error-container font-semibold">1 Backlog</span>
+</div>
+</div>
+<div class="flex flex-col gap-2 pt-space-xs">
+<div class="flex justify-between items-center font-label-code text-label-code">
+<span class="text-on-surface-variant">Syllabus</span>
+<span class="font-semibold text-on-surface">68%</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden">
+<div class="bg-surface-tint h-full w-[68%] rounded-full"></div>
+</div>
+<div class="flex justify-between items-center font-label-code text-label-code mt-1">
+<span class="text-tertiary flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>81% Retained
+          </span>
+<span class="text-on-surface-variant">Box 2 Avg</span>
+</div>
+</div>
+</div>
+<!-- Card 5: ME 307 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm hover:shadow-md flex flex-col justify-between transition-all duration-150 cursor-pointer group">
+<div>
+<div class="flex items-start justify-between gap-space-xs mb-2">
+<span class="font-label-code text-label-code font-bold uppercase tracking-wider text-on-surface-variant px-2 py-0.5 rounded bg-surface-container-high">ME 307</span>
+<span class="font-label-code text-label-code text-on-surface-variant">4.0 CR</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm font-semibold text-on-surface group-hover:text-primary transition-colors line-clamp-1 mb-1">Machine Design I</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant block mb-space-md">17 Topics Logged</span>
+</div>
+<div class="flex flex-col gap-2 pt-space-xs">
+<div class="flex justify-between items-center font-label-code text-label-code">
+<span class="text-on-surface-variant">Syllabus</span>
+<span class="font-semibold text-on-surface">78%</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden">
+<div class="bg-surface-tint h-full w-[78%] rounded-full"></div>
+</div>
+<div class="flex justify-between items-center font-label-code text-label-code mt-1">
+<span class="text-tertiary flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>88% Retained
+          </span>
+<span class="text-tertiary font-semibold">Stable</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Deep Dive Selected Course Workspace -->
+<div class="grid grid-cols-1 2xl:grid-cols-4 gap-space-lg">
+<!-- Left 3 Columns: Topic Register & Curriculum Units -->
+<div class="2xl:col-span-3 flex flex-col gap-space-lg">
+<!-- Course Inspection Banner -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-14 h-14 rounded-lg bg-surface-container-high flex flex-col items-center justify-center font-label-code text-on-surface">
+<span class="font-bold text-[14px]">ME</span>
+<span class="text-[12px] text-primary font-semibold">308</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h2 class="font-headline-lg text-headline-lg font-semibold text-on-surface">ME 308: Heat and Mass Transfer</h2>
+<span class="font-label-status text-label-status px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed uppercase">Active Focus</span>
+</div>
+<div class="flex flex-wrap items-center gap-x-space-md gap-y-1 font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+<span>Instructor: <strong class="text-on-surface font-medium">Prof. P. Mahanta</strong></span>
+<span>•</span>
+<span>Mid-Sem Weightage: <strong class="text-on-surface font-medium">35%</strong></span>
+<span>•</span>
+<span>L-T-P: <strong class="text-on-surface font-medium">3-1-0</strong></span>
+<span>•</span>
+<span>Room: <strong class="text-on-surface font-medium">ME Core Hall 2</strong></span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs self-start md:self-auto">
+<button class="px-space-sm py-1.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors font-body-sm text-body-sm font-medium flex items-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">download</span>
+<span>Export Syllabus</span>
+</button>
+<button class="px-space-sm py-1.5 rounded-lg bg-primary-container text-on-primary-container hover:bg-primary transition-colors font-body-sm text-body-sm font-medium flex items-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span>Batch Revise</span>
+</button>
+</div>
+</div>
+<!-- UNIT 1: Conduction Section -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-code text-label-code bg-surface-container px-2 py-0.5 rounded font-semibold text-on-surface">UNIT 01</span>
+<h3 class="font-headline-sm text-headline-sm font-semibold text-on-surface">Conduction Systems</h3>
+<span class="font-label-status text-label-status px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-semibold uppercase">Finished • 100% Retained</span>
+</div>
+<span class="font-label-code text-label-code text-on-surface-variant">4 Modules Logged</span>
+</div>
+<!-- Topic Rows Stack -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Topic 1.1 -->
+<div class="p-space-md hover:bg-surface-container-low transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary mt-2 shrink-0" title="Mastered"></span>
+<div class="flex flex-col gap-0.5">
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-label-code text-label-code text-on-surface-variant font-medium">1.1</span>
+<span class="font-body-lg text-body-lg font-semibold text-on-surface">Fourier's Law &amp; 3D Conduction Equation</span>
+<span class="font-label-status text-label-status px-2 py-0.5 rounded bg-tertiary-container text-on-tertiary-container font-semibold">Mastered</span>
+<span class="font-label-code text-label-code text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">Box 4 • 12d ago</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm font-body-sm text-body-sm text-on-surface-variant pt-1">
+<span class="flex items-center gap-1 text-on-surface"><span class="material-symbols-outlined text-[15px] text-primary">picture_as_pdf</span> Prof_Slides_L01_03.pdf</span>
+<span>•</span>
+<span class="flex items-center gap-1 text-on-surface"><span class="material-symbols-outlined text-[15px] text-tertiary">description</span> Cartesian/Cylindrical/Spherical Derivations</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs self-end lg:self-center shrink-0">
+<button class="px-space-sm py-1.5 rounded-lg hover:bg-surface-container text-on-surface font-body-sm text-body-sm font-medium transition-colors" type="button">Notes</button>
+<button class="px-space-sm py-1.5 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container text-body-sm font-body-sm font-medium transition-colors" type="button">Review Topic</button>
+</div>
+</div>
+<div class="h-px bg-surface-container"></div>
+<!-- Topic 1.2 -->
+<div class="p-space-md hover:bg-surface-container-low transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary mt-2 shrink-0" title="Mastered"></span>
+<div class="flex flex-col gap-0.5">
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-label-code text-label-code text-on-surface-variant font-medium">1.2</span>
+<span class="font-body-lg text-body-lg font-semibold text-on-surface">1D Steady State Conduction through Composite Walls</span>
+<span class="font-label-status text-label-status px-2 py-0.5 rounded bg-tertiary-container text-on-tertiary-container font-semibold">Mastered</span>
+<span class="font-label-code text-label-code text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">Box 4 • 9d ago</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm font-body-sm text-body-sm text-on-surface-variant pt-1">
+<span class="flex items-center gap-1 text-on-surface"><span class="material-symbols-outlined text-[15px] text-primary">draw</span> Thermal Resistance Networks</span>
+<span>•</span>
+<span class="flex items-center gap-1 text-on-surface"><span class="material-symbols-outlined text-[15px] text-secondary">assignment</span> PYQ 2021 Numerical Set</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs self-end lg:self-center shrink-0">
+<button class="px-space-sm py-1.5 rounded-lg hover:bg-surface-container text-on-surface font-body-sm text-body-sm font-medium transition-colors" type="button">Notes</button>
+<button class="px-space-sm py-1.5 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container text-body-sm font-body-sm font-medium transition-colors" type="button">Review Topic</button>
+</div>
+</div>
+<div class="h-px bg-surface-container"></div>
+<!-- Topic 1.3 -->
+<div class="p-space-md hover:bg-surface-container-low transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-surface-bright">
+<div class="flex items-start gap-space-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-primary mt-2 shrink-0" title="Needs Practice"></span>
+<div class="flex flex-col gap-0.5">
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-label-code text-label-code text-on-surface-variant font-medium">1.3</span>
+<span class="font-body-lg text-body-lg font-semibold text-on-surface">Extended Surfaces &amp; Fin Efficiency (Hyperbolic Functions)</span>
+<span class="font-label-status text-label-status px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed font-semibold">Needs Practice</span>
+<span class="font-label-code text-label-code text-primary font-semibold bg-primary-fixed/50 px-1.5 py-0.5 rounded">Box 2 • 3d interval</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm font-body-sm text-body-sm text-on-surface-variant pt-1">
+<span class="text-error font-medium flex items-center gap-1"><span class="material-symbols-outlined text-[15px]">priority_high</span> Boundary condition pitfall (Insulated fin tip)</span>
+<span>•</span>
+<span class="flex items-center gap-1 text-on-surface"><span class="material-symbols-outlined text-[15px] text-primary">picture_as_pdf</span> Prof_Slides_L06.pdf</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs self-end lg:self-center shrink-0">
+<button class="px-space-sm py-1.5 rounded-lg hover:bg-surface-container text-on-surface font-body-sm text-body-sm font-medium transition-colors" type="button">Edit Notes</button>
+<button class="px-space-sm py-1.5 rounded-lg bg-primary-container text-on-primary-container hover:bg-primary text-body-sm font-body-sm font-medium transition-colors flex items-center gap-1 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[15px]">refresh</span>
+<span>Revise Fin Equations</span>
+</button>
+</div>
+</div>
+<div class="h-px bg-surface-container"></div>
+<!-- Topic 1.4 -->
+<div class="p-space-md hover:bg-surface-container-low transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-secondary-fixed/20">
+<div class="flex items-start gap-space-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-primary mt-2 shrink-0 animate-pulse" title="Due Today"></span>
+<div class="flex flex-col gap-0.5">
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-label-code text-label-code text-on-surface-variant font-medium">1.4</span>
+<span class="font-body-lg text-body-lg font-semibold text-on-surface">Transient Conduction: Lumped Capacitance &amp; Heisler Charts</span>
+<span class="font-label-status text-label-status px-2 py-0.5 rounded bg-primary-fixed-dim text-on-primary-fixed-variant font-semibold">Due for Review Today</span>
+<span class="font-label-code text-label-code text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">Box 3 • Biot No &lt; 0.1</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm font-body-sm text-body-sm text-on-surface-variant pt-1">
+<span class="flex items-center gap-1 text-on-surface"><span class="material-symbols-outlined text-[15px] text-tertiary">analytics</span> Fourier Number Calculation Matrix</span>
+<span>•</span>
+<span class="flex items-center gap-1 text-on-surface"><span class="material-symbols-outlined text-[15px] text-secondary">assignment_turned_in</span> 3 Tutorial Problems</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs self-end lg:self-center shrink-0">
+<button class="px-space-sm py-1.5 rounded-lg bg-primary text-on-primary hover:bg-on-primary-fixed-variant text-body-sm font-body-sm font-medium transition-colors flex items-center gap-1 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span>
+<span>Start Review (15m)</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Clean Mini-Card Empty State / Fallback demonstration -->
+<div class="p-space-sm bg-surface-container-lowest rounded-lg flex items-center justify-between text-on-surface-variant shadow-sm px-space-md">
+<div class="flex items-center gap-2 font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[18px] text-tertiary">check_circle</span>
+<span>No backlogs in Unit 1. Spaced intervals maintained on schedule.</span>
+</div>
+<span class="font-label-code text-label-code text-tertiary font-medium">Zero Debt</span>
+</div>
+</div>
+<!-- UNIT 2: Convection Section -->
+<div class="flex flex-col gap-space-sm mt-space-md">
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-code text-label-code bg-surface-container px-2 py-0.5 rounded font-semibold text-on-surface">UNIT 02</span>
+<h3 class="font-headline-sm text-headline-sm font-semibold text-on-surface">Forced &amp; Natural Convection</h3>
+<span class="font-label-status text-label-status px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-semibold uppercase">In Progress • 65% Covered</span>
+</div>
+<span class="font-label-code text-label-code text-on-surface-variant">3 Modules Logged</span>
+</div>
+<!-- Unit 2 List Rows -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Topic 2.1 -->
+<div class="p-space-md hover:bg-surface-container-low transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary mt-2 shrink-0"></span>
+<div class="flex flex-col gap-0.5">
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-label-code text-label-code text-on-surface-variant font-medium">2.1</span>
+<span class="font-body-lg text-body-lg font-semibold text-on-surface">Boundary Layer Equations &amp; Reynolds Analogy</span>
+<span class="font-label-status text-label-status px-2 py-0.5 rounded bg-tertiary-container text-on-tertiary-container font-semibold">Mastered</span>
+<span class="font-label-code text-label-code text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">Box 3 • Level 3</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm font-body-sm text-body-sm text-on-surface-variant pt-1">
+<span class="flex items-center gap-1 text-on-surface"><span class="material-symbols-outlined text-[15px] text-primary">picture_as_pdf</span> Prof_Slides_L10_11.pdf</span>
+<span>•</span>
+<span class="flex items-center gap-1 text-on-surface"><span class="material-symbols-outlined text-[15px] text-secondary">description</span> Prandtl Number physical meaning note</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs self-end lg:self-center shrink-0">
+<button class="px-space-sm py-1.5 rounded-lg hover:bg-surface-container text-on-surface font-body-sm text-body-sm font-medium transition-colors" type="button">Notes</button>
+<button class="px-space-sm py-1.5 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container text-body-sm font-body-sm font-medium transition-colors" type="button">Review Topic</button>
+</div>
+</div>
+<div class="h-px bg-surface-container"></div>
+<!-- Topic 2.2 -->
+<div class="p-space-md hover:bg-surface-container-low transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary-container mt-2 shrink-0"></span>
+<div class="flex flex-col gap-0.5">
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-label-code text-label-code text-on-surface-variant font-medium">2.2</span>
+<span class="font-body-lg text-body-lg font-semibold text-on-surface">Empirical Correlations for Pipe Flow (Dittus-Bölter Equation)</span>
+<span class="font-label-status text-label-status px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-semibold">Scheduled Tomorrow</span>
+<span class="font-label-code text-label-code text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">Nu = 0.023 Re^0.8 Pr^n</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm font-body-sm text-body-sm text-on-surface-variant pt-1">
+<span class="flex items-center gap-1 text-on-surface"><span class="material-symbols-outlined text-[15px] text-primary">draw</span> Handwritten Equations.note</span>
+<span>•</span>
+<span class="flex items-center gap-1 text-on-surface"><span class="material-symbols-outlined text-[15px] text-tertiary">quiz</span> PYQ 2022-24 Questions</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs self-end lg:self-center shrink-0">
+<button class="px-space-sm py-1.5 rounded-lg hover:bg-surface-container text-on-surface font-body-sm text-body-sm font-medium transition-colors" type="button">Edit Notes</button>
+<button class="px-space-sm py-1.5 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container text-body-sm font-body-sm font-medium transition-colors" type="button">Trigger Spaced Rep</button>
+</div>
+</div>
+<div class="h-px bg-surface-container"></div>
+<!-- Topic 2.3 -->
+<div class="p-space-md hover:bg-surface-container-low transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-surface-bright">
+<div class="flex items-start gap-space-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary mt-2 shrink-0"></span>
+<div class="flex flex-col gap-0.5">
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-label-code text-label-code text-on-surface-variant font-medium">2.3</span>
+<span class="font-body-lg text-body-lg font-semibold text-on-surface">Natural Convection over Vertical Plates &amp; Grashof Number</span>
+<span class="font-label-status text-label-status px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-semibold">Logged Today (9:00 AM)</span>
+<span class="font-label-code text-label-code text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">Lecture 14</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm font-body-sm text-body-sm text-on-surface-variant pt-1">
+<span class="flex items-center gap-1 text-on-surface"><span class="material-symbols-outlined text-[15px] text-primary">picture_as_pdf</span> Prof_Slides_L14.pdf</span>
+<span>•</span>
+<span class="flex items-center gap-1 text-tertiary font-medium"><span class="material-symbols-outlined text-[15px]">auto_awesome</span> REV-AI Synthesized Key Insights Attached</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs self-end lg:self-center shrink-0">
+<button class="px-space-sm py-1.5 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container text-body-sm font-body-sm font-medium transition-colors" type="button">View Lecture Notes</button>
+<button class="px-space-sm py-1.5 rounded-lg bg-primary-container text-on-primary-container hover:bg-primary text-body-sm font-body-sm font-medium transition-colors" type="button">Start First Recall</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right 1 Column: Course Context, Attached Materials & AI Summary Module -->
+<div class="flex flex-col gap-space-lg">
+<!-- AI Knowledge Diagnostic Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-status text-label-status px-2 py-0.5 rounded bg-surface-container-high text-primary font-semibold tracking-wider">REV-AI • SPARK SUMMARY</span>
+<span class="font-label-code text-label-code text-tertiary font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-ping"></span>Live Analysis
+          </span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-semibold text-on-surface">Unit 2 High-Yield Pitfalls</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Empirical analyses show that 64% of mid-semester mark deductions occur when computing fluid properties at surface temperature rather than film temperature <span class="font-label-code text-label-code bg-surface-container px-1 py-0.5 rounded text-on-surface">T_f = (T_s + T_∞)/2</span>.
+        </p>
+<div class="bg-surface-container-low rounded-lg p-space-sm flex flex-col gap-1.5">
+<span class="font-label-status text-label-status uppercase text-on-surface-variant font-semibold">Predicted Exam Question</span>
+<p class="font-body-sm text-body-sm text-on-surface italic">"Derive relation between Grashof (Gr), Reynolds (Re) and Richardson number (Ri) to determine natural vs forced convection regime dominance."</p>
+<div class="flex items-center justify-between mt-1 pt-1">
+<span class="font-label-code text-label-code text-primary font-semibold">Probability: 88%</span>
+<button class="text-primary font-body-sm text-body-sm font-medium hover:underline flex items-center gap-0.5" type="button">
+<span>View Derivation</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Resource Vault for ME 308 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm font-semibold text-on-surface">Course Artifacts</h3>
+<span class="font-label-code text-label-code text-on-surface-variant">14 Files</span>
+</div>
+<div class="flex flex-col gap-2">
+<a class="p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors flex items-center justify-between group" href="#">
+<div class="flex items-center gap-2.5 min-w-0">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0">menu_book</span>
+<div class="flex flex-col min-w-0">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface truncate group-hover:text-primary transition-colors">Incropera_Heat_Transfer_8th.pdf</span>
+<span class="font-label-code text-label-code text-on-surface-variant">Core Reference • 38.4 MB</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">download</span>
+</a>
+<a class="p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors flex items-center justify-between group" href="#">
+<div class="flex items-center gap-2.5 min-w-0">
+<span class="material-symbols-outlined text-tertiary text-[20px] shrink-0">data_table</span>
+<div class="flex flex-col min-w-0">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface truncate group-hover:text-primary transition-colors">Steam_Tables_&amp;_Psychrometric.pdf</span>
+<span class="font-label-code text-label-code text-on-surface-variant">Exam Approved Annexure</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">visibility</span>
+</a>
+<a class="p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors flex items-center justify-between group" href="#">
+<div class="flex items-center gap-2.5 min-w-0">
+<span class="material-symbols-outlined text-secondary text-[20px] shrink-0">note_alt</span>
+<div class="flex flex-col min-w-0">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface truncate group-hover:text-primary transition-colors">MidSem_CheatSheet_Formulas.note</span>
+<span class="font-label-code text-label-code text-on-surface-variant">Your handwritten annotations</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">edit</span>
+</a>
+</div>
+<button class="w-full py-2 rounded-lg bg-surface-container-high hover:bg-surface-container text-on-surface font-body-sm text-body-sm font-medium transition-colors flex items-center justify-center gap-1 mt-1 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">upload_file</span>
+<span>Upload Lab or Lecture File</span>
+</button>
+</div>
+<!-- Spaced Repetition Retention Matrix -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<h3 class="font-headline-sm text-headline-sm font-semibold text-on-surface">Leitner Distribution (ME 308)</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Retention breakdown across algorithmic spacing tiers.</p>
+<div class="flex flex-col gap-2 mt-1">
+<div>
+<div class="flex justify-between font-label-code text-label-code mb-1">
+<span class="text-tertiary font-semibold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-tertiary"></span>Box 4 (Mastered • 14d)</span>
+<span class="font-semibold text-on-surface">9 Topics</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full w-[50%] rounded-full"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-label-code text-label-code mb-1">
+<span class="text-on-surface font-semibold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-surface-tint"></span>Box 3 (Stable • 7d)</span>
+<span class="font-semibold text-on-surface">5 Topics</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-surface-tint h-full w-[28%] rounded-full"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-label-code text-label-code mb-1">
+<span class="text-primary font-semibold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary"></span>Box 2 (Review Due • 3d)</span>
+<span class="font-semibold text-on-surface">3 Topics</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[17%] rounded-full"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-label-code text-label-code mb-1">
+<span class="text-error font-semibold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-error"></span>Box 1 (Lapsed/New • 1d)</span>
+<span class="font-semibold text-on-surface">1 Topic</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-error h-full w-[5%] rounded-full"></div>
+</div>
+</div>
+</div>
+<div class="pt-space-xs mt-space-xs">
+<div class="flex items-center justify-between font-label-code text-label-code text-on-surface-variant">
+<span>Next Algorithm Recalibration</span>
+<span class="text-on-surface font-semibold">23:00 IST</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f9f9f6">
+  <meta name="description" content="Revision OS — AI-Powered Semester Tracker for IIT Guwahati Mechanical Engineering">
+  <title>Revision OS — IIT Guwahati Semester Tracker</title>
+  
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Material Symbols Outlined from Google Stitch -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS & Exact Google Stitch Design Theme Configuration -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#8d4b00",
+            "primary-container": "#b15f00",
+            "primary-fixed": "#ffdcc3",
+            "primary-fixed-dim": "#ffb77d",
+            "on-primary": "#ffffff",
+            "on-primary-container": "#fffbff",
+            "on-primary-fixed": "#2f1500",
+            "on-primary-fixed-variant": "#6e3900",
+            
+            "surface": "#f9f9f6",
+            "surface-bright": "#f9f9f6",
+            "surface-dim": "#dadad7",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f4f4f1",
+            "surface-container": "#eeeeeb",
+            "surface-container-high": "#e8e8e5",
+            "surface-container-highest": "#e2e3e0",
+            "surface-variant": "#e2e3e0",
+            "surface-tint": "#904d00",
+            
+            "on-surface": "#1a1c1b",
+            "on-surface-variant": "#554336",
+            "background": "#f9f9f6",
+            "on-background": "#1a1c1b",
+            
+            "outline": "#887364",
+            "outline-variant": "#dbc2b0",
+            
+            "tertiary": "#006948",
+            "tertiary-container": "#00855d",
+            "on-tertiary": "#ffffff",
+            "on-tertiary-container": "#f5fff7",
+            "tertiary-fixed": "#85f8c4",
+            "tertiary-fixed-dim": "#68dba9",
+            
+            "secondary": "#545f73",
+            "secondary-container": "#d5e0f8",
+            "secondary-fixed": "#d8e3fb",
+            "secondary-fixed-dim": "#bcc7de",
+            "on-secondary": "#ffffff",
+            "on-secondary-container": "#586377",
+            
+            "error": "#ba1a1a",
+            "error-container": "#ffdad6",
+            "on-error": "#ffffff",
+            "on-error-container": "#93000a",
+            
+            "inverse-surface": "#2f312f",
+            "inverse-on-surface": "#f1f1ee",
+            "inverse-primary": "#ffb77d"
+          },
+          borderRadius: {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          spacing: {
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem",
+            "space-lg": "1.5rem",
+            "space-xl": "2.25rem",
+            "gutter": "1rem",
+            "gutter-desktop": "1.5rem",
+            "margin": "1rem",
+            "margin-desktop": "2rem"
+          },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"],
+            "label-code": ["JetBrains Mono", "monospace"],
+            "label-status": ["Inter", "sans-serif"],
+            "body-sm": ["Inter", "sans-serif"],
+            "body-md": ["Inter", "sans-serif"],
+            "body-lg": ["Inter", "sans-serif"],
+            "headline-sm": ["Inter", "sans-serif"],
+            "headline-md": ["Inter", "sans-serif"],
+            "headline-lg": ["Inter", "sans-serif"],
+            "headline-xl": ["Inter", "sans-serif"],
+            "metric-display": ["Inter", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-background text-on-surface antialiased">
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
