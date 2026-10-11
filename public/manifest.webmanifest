@@ -1,0 +1,17 @@
+{
+  "name": "Revision OS — Semester Tracker",
+  "short_name": "Revision OS",
+  "description": "AI-Powered Semester Tracker & Spaced Repetition for IIT Guwahati",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9f9f6",
+  "theme_color": "#1e3a5f",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
