@@ -2381,3 +2381,168 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   background: var(--accent-orange);
 }
 
+/* ========================================================
+   Phase 6: End-of-Day Review & Class Assignment Capture
+   ======================================================== */
+.class-assignment-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--bg-subtle);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+
+.class-assignment-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px;
+  background: #fdfaf6;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.eod-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.eod-stat-card {
+  padding: 12px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eod-stat-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.eod-stat-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.eod-stat-sub {
+  font-size: 10px;
+  color: var(--ink-muted);
+}
+
+.eod-section {
+  margin-bottom: 18px;
+}
+
+.eod-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.eod-class-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eod-class-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.eod-class-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 140px;
+}
+
+.eod-class-meta b {
+  font-size: 12px;
+  color: var(--ink-main);
+}
+
+.eod-class-meta span {
+  font-size: 10px;
+  color: var(--ink-muted);
+}
+
+.eod-class-status-select {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--bg-card);
+  color: var(--ink-main);
+}
+
+.eod-carry-forward-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  border-radius: var(--radius-sm);
+  margin-top: 10px;
+}
+
+.eod-carry-forward-banner div b {
+  font-size: 12px;
+  color: #854d0e;
+  display: block;
+}
+
+.eod-carry-forward-banner div span {
+  font-size: 11px;
+  color: #713f12;
+}
+
+.eod-task-list {
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.eod-task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+}
+
+

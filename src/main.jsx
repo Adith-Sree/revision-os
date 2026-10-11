@@ -512,6 +512,7 @@ function App() {
       code: slot.code,
       topic: details.topic.trim(),
       attended: details.attended,
+      status: details.status || (details.attended ? 'completed' : 'missed'),
       notes: details.notes.trim()
     };
     let newTopic = null;
@@ -543,13 +544,49 @@ function App() {
         createdAt: today
       };
     }
-    update(d => ({
-      ...d,
-      classLog: [entry, ...d.classLog],
-      topics: newTopic ? [newTopic, ...d.topics] : d.topics,
-      tasks: newTask ? [newTask, ...d.tasks] : d.tasks
-    }));
-    setToast(details.topic.trim() ? 'Class logged & revision task generated!' : 'Class attendance recorded');
+
+    const courseId = mappedCourse(slot.code);
+    let newAssignment = null;
+    let newAssignTask = null;
+    if (details.assignmentTitle && details.assignmentTitle.trim() && courseId) {
+      newAssignment = {
+        id: uid(),
+        title: details.assignmentTitle.trim(),
+        dueDate: details.assignmentDue || today,
+        status: 'pending',
+        notes: details.assignmentNotes?.trim() || ''
+      };
+      newAssignTask = {
+        id: uid(),
+        title: `Assignment: ${details.assignmentTitle.trim()}`,
+        courseId: courseId,
+        dueDate: details.assignmentDue || today,
+        kind: 'Practice',
+        priority: 2,
+        estimatedMinutes: 45,
+        status: 'todo',
+        createdAt: today
+      };
+    }
+
+    update(d => {
+      const filteredLogs = (d.classLog || []).filter(l => !(l.slotId === slot.id && l.date === today));
+      return {
+        ...d,
+        courses: newAssignment ? d.courses.map(c => c.id === courseId ? {
+          ...c,
+          assignments: [...(c.assignments || []), newAssignment]
+        } : c) : d.courses,
+        classLog: [entry, ...filteredLogs],
+        topics: newTopic ? [newTopic, ...d.topics] : d.topics,
+        tasks: [
+          ...(newAssignTask ? [newAssignTask] : []),
+          ...(newTask ? [newTask] : []),
+          ...d.tasks
+        ]
+      };
+    });
+    setToast(details.topic.trim() ? (newAssignment ? 'Lecture logged & assignment attached!' : 'Class logged & revision task generated!') : 'Class attendance recorded');
     setModal(null);
   }
 
@@ -853,6 +890,7 @@ function App() {
               onAddTopic={() => setModal({ type: 'topic' })}
               onGenerateTimetableTasks={() => generateRevisionTasksFromTimetable(today)}
               onSpacedReview={triggerSpacedReview}
+              onEndOfDayReview={() => setModal({ type: 'end_of_day' })}
             />
           )}
 
@@ -980,6 +1018,8 @@ function App() {
             setModal(null);
             setToast(assessmentData.id ? 'Assessment record updated' : 'Assessment scheduled & saved');
           }}
+          onUpdate={update}
+          setModal={setModal}
           user={user}
           setUser={setUser}
           setToast={setToast}
@@ -1003,7 +1043,8 @@ function App() {
 // ==========================================
 function DashboardView({
   data, today, courseFor, onPage, onTaskAction, onReschedule,
-  onAddTask, onLogClass, onAddTopic, onGenerateTimetableTasks, onSpacedReview
+  onAddTask, onLogClass, onAddTopic, onGenerateTimetableTasks, onSpacedReview,
+  onEndOfDayReview
 }) {
   const todaysSlots = useMemo(() =>
     data.slots.filter(s => s.day === dayName(today)).sort((a, b) => a.start.localeCompare(b.start)),
@@ -1081,6 +1122,9 @@ function DashboardView({
           </p>
         </div>
         <div className="heading-actions">
+          <button className="btn btn-secondary" onClick={onEndOfDayReview}>
+            <CheckCheck size={15} /> End-of-Day Review
+          </button>
           <button className="btn btn-secondary" onClick={onGenerateTimetableTasks}>
             <Calendar size={15} /> Generate Tasks from Timetable
           </button>
@@ -1275,9 +1319,14 @@ function DashboardView({
               <h3>Today’s Class Timetable</h3>
               <p>{dayName(today)} · {todaysSlots.length} Scheduled Sessions</p>
             </div>
-            <button className="text-link" onClick={() => onPage('timetable')}>
-              Edit schedule <ArrowRight size={13} />
-            </button>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <button className="text-link" onClick={onEndOfDayReview}>
+                Review checklist <ArrowRight size={13} />
+              </button>
+              <button className="text-link" onClick={() => onPage('timetable')}>
+                Edit schedule <ArrowRight size={13} />
+              </button>
+            </div>
           </div>
 
           {todaysSlots.length > 0 ? (
@@ -1304,9 +1353,14 @@ function DashboardView({
                       </span>
                       <div className="schedule-actions">
                         {log ? (
-                          <span className="logged-badge">
-                            <Check size={12} /> Logged: {log.topic || 'Attended'}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span className="logged-badge">
+                              <Check size={12} /> {log.status === 'missed' ? 'Missed' : log.status === 'ongoing' ? 'Ongoing' : 'Logged'}: {log.topic || 'Attended'}
+                            </span>
+                            <button className="text-link" style={{ fontSize: '11px' }} onClick={() => onLogClass(slot)}>
+                              Edit
+                            </button>
+                          </div>
                         ) : (
                           <button onClick={() => onLogClass(slot)}>
                             Log Lecture & Topic <ArrowRight size={12} />
@@ -2825,7 +2879,7 @@ function ExamTrackerPage({
 // ==========================================
 // MODAL MANAGER & SUPABASE SETUP MODAL
 // ==========================================
-function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, onSlot, onMapping, onAssessment, user, setUser, setToast }) {
+function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, onSlot, onMapping, onAssessment, onUpdate, setModal, user, setUser, setToast }) {
   const [supabaseUrl, setSupabaseUrl] = useState(getStoredSupabaseConfig().url || '');
   const [supabaseKey, setSupabaseKey] = useState(getStoredSupabaseConfig().key || 'sb_publishable_g6f2zn68OSWM8Hmnf1PhQg_JiTw01AX');
   const [testResult, setTestResult] = useState(null);
@@ -2851,10 +2905,15 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
   const [topicFirstDue, setTopicFirstDue] = useState(today);
 
   // Class log form state
-  const [classTopic, setClassTopic] = useState('');
-  const [classNotes, setClassNotes] = useState('');
-  const [classAttended, setClassAttended] = useState(true);
-  const [classStatus, setClassStatus] = useState('completed');
+  const existingLog = modal.slot ? (data.classLog || []).find(l => l.slotId === modal.slot.id && l.date === today) : null;
+  const [classTopic, setClassTopic] = useState(existingLog?.topic || '');
+  const [classNotes, setClassNotes] = useState(existingLog?.notes || '');
+  const [classAttended, setClassAttended] = useState(existingLog ? (existingLog.attended !== false) : true);
+  const [classStatus, setClassStatus] = useState(existingLog?.status || (existingLog ? (existingLog.attended ? 'completed' : 'missed') : 'completed'));
+  const [showAssignmentField, setShowAssignmentField] = useState(false);
+  const [classAssignmentTitle, setClassAssignmentTitle] = useState('');
+  const [classAssignmentDue, setClassAssignmentDue] = useState(shiftDate(today, 7));
+  const [classAssignmentNotes, setClassAssignmentNotes] = useState('');
 
   // Assessment form state
   const existingAsm = modal.assessment || null;
@@ -2945,7 +3004,8 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
                modal.type === 'task' ? 'REVISION WORKSPACE' :
                modal.type === 'topic' ? 'KNOWLEDGE BASE' :
                modal.type === 'class' ? 'LECTURE CAPTURE' :
-               modal.type === 'assessment' ? 'EXAM & PERFORMANCE TRACKER' : 'CONFIGURATION'}
+               modal.type === 'assessment' ? 'EXAM & PERFORMANCE TRACKER' :
+               modal.type === 'end_of_day' ? 'DAILY CLOSEOUT REVIEW' : 'CONFIGURATION'}
             </div>
             <h2>
               {modal.type === 'supabase' ? 'Supabase Sync Setup' :
@@ -2953,6 +3013,7 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
                modal.type === 'topic' ? 'Log Lecture Topic' :
                modal.type === 'class' ? `Log Lecture: ${modal.slot?.code}` :
                modal.type === 'assessment' ? (modal.assessment ? `Edit Assessment: ${modal.assessment.title}` : 'Add New Assessment') :
+               modal.type === 'end_of_day' ? 'End-of-Day Daily Review' :
                modal.type === 'slot' ? 'Add Timetable Slot' :
                modal.type === 'mapping' ? `Map Schedule Code: ${modal.code}` : 'Settings'}
             </h2>
@@ -3239,7 +3300,10 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
               topic: classTopic,
               notes: classNotes,
               attended: classStatus !== 'missed',
-              status: classStatus
+              status: classStatus,
+              assignmentTitle: showAssignmentField ? classAssignmentTitle : '',
+              assignmentDue: showAssignmentField ? classAssignmentDue : '',
+              assignmentNotes: showAssignmentField ? classAssignmentNotes : ''
             });
           }}>
             <div className="class-modal-banner">
@@ -3264,7 +3328,17 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
             </label>
 
             <label>
-              What was covered in this lecture?
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>What was covered in this lecture?</span>
+                <button
+                  type="button"
+                  className="text-link"
+                  style={{ fontSize: '11px', textTransform: 'none' }}
+                  onClick={() => setClassTopic('Topic not known yet')}
+                >
+                  Topic not known yet
+                </button>
+              </div>
               <textarea
                 value={classTopic}
                 onChange={e => setClassTopic(e.target.value)}
@@ -3284,6 +3358,51 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
               />
             </label>
 
+            {/* Optional Assignment Attachment */}
+            <div
+              className="class-assignment-toggle"
+              onClick={() => setShowAssignmentField(!showAssignmentField)}
+            >
+              <input
+                type="checkbox"
+                checked={showAssignmentField}
+                onChange={e => setShowAssignmentField(e.target.checked)}
+                onClick={e => e.stopPropagation()}
+              />
+              <span>Attach an assignment given in this class</span>
+            </div>
+
+            {showAssignmentField && (
+              <div className="class-assignment-fields">
+                <label>
+                  Assignment Title
+                  <input
+                    type="text"
+                    value={classAssignmentTitle}
+                    onChange={e => setClassAssignmentTitle(e.target.value)}
+                    placeholder="e.g. Problem Sheet 3: Force balance analysis"
+                  />
+                </label>
+                <label>
+                  Submission Deadline
+                  <input
+                    type="date"
+                    value={classAssignmentDue}
+                    onChange={e => setClassAssignmentDue(e.target.value)}
+                  />
+                </label>
+                <label>
+                  Assignment Notes / Requirements
+                  <textarea
+                    value={classAssignmentNotes}
+                    onChange={e => setClassAssignmentNotes(e.target.value)}
+                    placeholder="Instructions, reference questions, or submission details…"
+                    rows={2}
+                  />
+                </label>
+              </div>
+            )}
+
             <p className="form-hint">
               If a topic is entered, Revision OS adds it to your Course Library and queues a same-day revision task.
             </p>
@@ -3294,6 +3413,189 @@ function ModalManager({ modal, data, today, onClose, onTask, onTopic, onClass, o
             </div>
           </form>
         )}
+
+        {/* End-of-Day Daily Review Modal */}
+        {modal.type === 'end_of_day' && (() => {
+          const daySlots = (data.slots || [])
+            .filter(s => s.day === dayName(today))
+            .sort((a, b) => a.start.localeCompare(b.start));
+          const dayLogs = (data.classLog || []).filter(l => l.date === today);
+          const loggedSlotsCount = daySlots.filter(s => dayLogs.some(l => l.slotId === s.id && l.status !== 'not_logged')).length;
+
+          const todaysTasks = (data.tasks || []).filter(t => t.dueDate === today);
+          const completedTasksCount = todaysTasks.filter(t => t.status === 'done').length;
+          const unrevisedTasks = (data.tasks || []).filter(t => t.status === 'todo' && t.dueDate <= today);
+
+          const handleUpdateSlotStatus = (slot, newStatus) => {
+            onUpdate(d => {
+              const existingIdx = (d.classLog || []).findIndex(l => l.slotId === slot.id && l.date === today);
+              if (existingIdx >= 0) {
+                const nextLogs = [...d.classLog];
+                nextLogs[existingIdx] = {
+                  ...nextLogs[existingIdx],
+                  status: newStatus,
+                  attended: newStatus !== 'missed'
+                };
+                return { ...d, classLog: nextLogs };
+              } else {
+                return {
+                  ...d,
+                  classLog: [
+                    {
+                      id: uid(),
+                      date: today,
+                      slotId: slot.id,
+                      code: slot.code,
+                      topic: '',
+                      notes: '',
+                      attended: newStatus !== 'missed',
+                      status: newStatus
+                    },
+                    ...d.classLog
+                  ]
+                };
+              }
+            });
+            setToast(`Updated ${slot.code} status to ${newStatus}`);
+          };
+
+          const handleCarryForwardAll = () => {
+            const tomorrow = shiftDate(today, 1);
+            let count = 0;
+            onUpdate(d => {
+              const updated = (d.tasks || []).map(t => {
+                if (t.status === 'todo' && t.dueDate <= today) {
+                  count++;
+                  return { ...t, dueDate: tomorrow, lastNote: 'Carried forward from daily review' };
+                }
+                return t;
+              });
+              return { ...d, tasks: updated };
+            });
+            setToast(`Carried forward ${count} unrevised tasks to tomorrow!`);
+          };
+
+          return (
+            <div className="modal-form end-of-day-modal">
+              {/* Summary Metrics */}
+              <div className="eod-stats-row">
+                <div className="eod-stat-card">
+                  <span className="eod-stat-label">Lectures Logged</span>
+                  <span className="eod-stat-val">{loggedSlotsCount} / {daySlots.length}</span>
+                  <span className="eod-stat-sub">{daySlots.length ? `${Math.round((loggedSlotsCount / daySlots.length) * 100)}% recorded` : 'No classes today'}</span>
+                </div>
+                <div className="eod-stat-card">
+                  <span className="eod-stat-label">Tasks Revised</span>
+                  <span className="eod-stat-val">{completedTasksCount} / {todaysTasks.length}</span>
+                  <span className="eod-stat-sub">{todaysTasks.length ? `${Math.round((completedTasksCount / todaysTasks.length) * 100)}% recall complete` : 'No tasks due today'}</span>
+                </div>
+                <div className="eod-stat-card">
+                  <span className="eod-stat-label">Pending Backlog</span>
+                  <span className="eod-stat-val">{unrevisedTasks.length}</span>
+                  <span className="eod-stat-sub">{unrevisedTasks.length === 0 ? 'Queue clear!' : 'Needs carry-forward'}</span>
+                </div>
+              </div>
+
+              {/* Scheduled Classes Checklist */}
+              <div className="eod-section">
+                <div className="eod-section-title">
+                  <span>Scheduled Classes Checklist ({fmtDate(today)})</span>
+                  <span className="muted" style={{ fontWeight: 400, fontSize: '11px' }}>Verify attendance &amp; capture status</span>
+                </div>
+
+                {daySlots.length === 0 ? (
+                  <p className="muted" style={{ fontSize: '12px', padding: '10px 0' }}>
+                    No classes scheduled for today on your timetable (or institute holiday active).
+                  </p>
+                ) : (
+                  <div className="eod-class-list">
+                    {daySlots.map(slot => {
+                      const log = dayLogs.find(l => l.slotId === slot.id);
+                      const currentStatus = log?.status || (log ? (log.attended ? 'completed' : 'missed') : 'not_logged');
+                      return (
+                        <div className="eod-class-item" key={slot.id}>
+                          <div className="eod-class-meta">
+                            <b>{slot.code} · {slot.kind || 'Class'}</b>
+                            <span>{niceTime(slot.start)}–{niceTime(slot.end)} {slot.room ? `· Room ${slot.room}` : ''}</span>
+                            {log?.topic && (
+                              <span style={{ color: 'var(--accent-orange)', fontWeight: 500, marginTop: '2px' }}>
+                                Topic: {log.topic}
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <select
+                              className="eod-class-status-select"
+                              value={currentStatus}
+                              onChange={e => handleUpdateSlotStatus(slot, e.target.value)}
+                            >
+                              <option value="completed">Completed</option>
+                              <option value="ongoing">Ongoing</option>
+                              <option value="missed">Class missed</option>
+                              <option value="not_logged">Not logged</option>
+                            </select>
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => setModal({ type: 'class', slot })}
+                            >
+                              {log ? 'Edit Log' : 'Log Topic'}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Revision Tasks Closeout */}
+              <div className="eod-section">
+                <div className="eod-section-title">
+                  <span>Revision Tasks Closeout</span>
+                  <span className="muted" style={{ fontWeight: 400, fontSize: '11px' }}>Active recall queue status</span>
+                </div>
+
+                {unrevisedTasks.length > 0 ? (
+                  <>
+                    <div className="eod-carry-forward-banner">
+                      <div>
+                        <b>{unrevisedTasks.length} unrevised task{unrevisedTasks.length === 1 ? '' : 's'} remaining today</b>
+                        <span>Roll today&apos;s uncompleted spaced repetitions to tomorrow with one click.</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={handleCarryForwardAll}
+                      >
+                        Carry Forward All <ArrowRight size={13} />
+                      </button>
+                    </div>
+
+                    <div className="eod-task-list">
+                      {unrevisedTasks.map(t => (
+                        <div className="eod-task-item" key={t.id}>
+                          <b>{t.title}</b>
+                          <span className="muted">{t.estimatedMinutes || 25}m · Due {t.dueDate}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ padding: '14px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 'var(--radius-sm)', color: '#166534', fontSize: '12px' }}>
+                    🎉 <b>All revision tasks completed today!</b> Your active recall queue is fully cleared.
+                  </div>
+                )}
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn btn-primary" onClick={() => { onClose(); setToast('Daily review completed!'); }}>
+                  Done &amp; Close Review
+                </button>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Assessment Form Modal */}
         {modal.type === 'assessment' && (
