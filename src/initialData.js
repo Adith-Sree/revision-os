@@ -465,3 +465,33 @@ export const DEFAULT_SETTINGS = {
   studentName: 'Mechanical Engineering Student',
   institute: 'IIT Guwahati'
 };
+
+// Seed assessments for every course per EXAM_TRACKER.md
+// Rule: Never invent dates or marks. Blank fields indicate unannounced/not entered.
+const SEED_ASSESSMENT_TYPES = ['Quiz 1', 'Midsem', 'Quiz 2', 'Endsem'];
+
+export const DEFAULT_ASSESSMENTS = DEFAULT_COURSES.flatMap(course => 
+  SEED_ASSESSMENT_TYPES.map(type => ({
+    id: `asm-${course.id.replace(/[^a-zA-Z0-9]/g, '_')}-${type.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+    courseId: course.id,
+    title: `${type}`,
+    type: type,
+    scheduledAt: null,       // Date & time nullable until announced
+    status: 'tentative',     // tentative | confirmed | completed | postponed | cancelled
+    marksObtained: null,     // Nullable numeric value
+    maxMarks: null,          // Nullable numeric value
+    weightagePercent: null,  // Optional percentage 0-100
+    extraCredit: false,
+    syllabus: '',
+    notes: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }))
+);
+
+export const DEFAULT_HOLIDAYS = [
+  { id: 'hol-1', date: '2026-10-02', label: 'Gandhi Jayanti', isRange: false },
+  { id: 'hol-2', date: '2026-10-20', label: 'Dussehra / Puja Vacation', isRange: false },
+  { id: 'hol-3', date: '2026-11-09', label: 'Diwali', isRange: false }
+];
+
